@@ -3,9 +3,10 @@ import java.util.ArrayList;
 
 public class Server {
 	
-	private int id = 1; 
+	private static int id_user = 1, id_annonce = 1; 
 	private ServerSocket serv;
 	private ArrayList<User> users;
+	private ArrayList<Annonce> annonces;
 	
 	public Server(ServerSocket s) {
 		this.serv = s;
@@ -13,9 +14,9 @@ public class Server {
 		try{      
 			while(true){
 				Socket so = serv.accept();
-				User user = new User(this, so, id);
+				User user = new User(this, so, id_user);
 				users.add(user);
-				increment_id();
+				increment_id_user();
 				Thread t_user = new Thread(user);
 				t_user.start();
 			}	
@@ -27,8 +28,11 @@ public class Server {
 
 	}
 	
-	public void increment_id() {
-		id++;
+	public void increment_id_user() {
+		id_user++;
+	}
+	public void increment_id_annonce() {
+		id_annonce++;
 	}
 	
 	

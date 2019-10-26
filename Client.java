@@ -2,63 +2,114 @@ import java.net.*;
 import java.io.*;
 import java.util.*;
 
-class main {
+class Client {
 
-  public static void main(String[] args) {
-    try{
+	private Socket so;
+	private BufferedReader br;
+	private PrintWriter pw;
+	private Scanner sc;
+	private String mess, send;
+	
+	public Client() {
+		connection();
+		buffered();
+        sc = new Scanner(System.in);
+	}
+	
+	public void menu() {
+		try {
+			mess = br.readLine();
+		} catch (IOException e) {
+			System.out.println("Echec read");
+		}
+		String []tab = mess.split("&");
+		for(String s : tab) System.out.println(s);
+	}
+	
+	public void communication() {
 
-        Socket so = new Socket("localhost", 4242);
-
-        BufferedReader br=new BufferedReader(new InputStreamReader(so.getInputStream()));
-        PrintWriter pw=new PrintWriter(new OutputStreamWriter(so.getOutputStream()));
-
-        Scanner sc = new Scanner(System.in);
-
-
-        String mess = br.readLine();
-        System.out.println(mess);
-        mess = br.readLine();
-        System.out.println(mess);
-
-        String send;
-
-    /*    while(! ((send = sc.nextLine()).equals("quit"))) {
-        	if(send.equals("menu")) {
-        		mess = br.readLine();
-        		String []tab = mess.split("&");
-        		for(String s : tab) System.out.println(s);
-        	}
-        	pw.println(send);
-        	pw.flush();
-        }*/
-        do {
-        	System.out.print("> ");
-        	send = sc.nextLine();
-            pw.println(send);
-            pw.flush();
-            switch(send) {
-            case "MENU" :
-            	mess = br.readLine();
-        		String []tab = mess.split("&");
-        		for(String s : tab) System.out.println(s);
-        		break;
-            case "CONNECT" :
-            	System.out.print("Login : ");
-            	System.out.println("Password : ");
-            default :
-            	System.out.println("Cette commande n'existe pas");
-            }
-        }while(! send.equals("DISCONNECT"));
-
-        mess = br.readLine();
-        System.out.println(mess);
+		read();
+		read();
+		do {
+			send();
+			switch(send) {
+				case "MENU" :
+					menu();
+	        		break;
+	        	case "CONNECT" :
+	        		//login
+	            	read();
+	            	send();
+	            	//password
+	            	read();
+	            	send();
+	            	//connexion
+	            	read();
+	            default :
+	            	System.out.println("Cette commande n'existe pas");
+	            }
+	        }while(! send.equals("DISCONNECT"));
+	        read();
+	        close();
+	}
+	
+	private void close() {
         pw.close();
-        br.close();
-        so.close();
+        try {
+			br.close();
+		} catch (IOException e) {
+			System.out.println("Echec br.close()");
+		}
+        try {
+			so.close();
+		} catch (IOException e) {
+			System.out.println("Echec so.close()");
+		}
+	}
+	
+	private void connection() {
+		try {
+			so = new Socket("localhost", 4242);
+		} catch (UnknownHostException e) {
+			System.out.println("Erreur host");
+		} catch (IOException e) {
+			System.out.println("Echec connexion au serveur");
+		}
+	}
+	
+	private void buffered() {
+        try {
+			br=new BufferedReader(new InputStreamReader(so.getInputStream()));
+		} catch (IOException e) {
+			System.out.println("Echec création BufferedReader");
+		}
+        try {
+			pw=new PrintWriter(new OutputStreamWriter(so.getOutputStream()));
+		} catch (IOException e) {
+			System.out.println("Echec création PrintWriter");
+		}
+	}
+	
+	private void read() {
+        String mess;
+		try {
+			mess = br.readLine();
+	        System.out.println(mess);
 
-    }
-    catch (Exception e) {
-          e.printStackTrace();
-    }
-  }
+		} catch (IOException e) {
+			System.out.println("Echec du readLine");
+		}
+	}
+	
+	private void send() {
+    	System.out.print("> ");
+    	send = sc.nextLine();
+        pw.println(send);
+        pw.flush();
+	}
+	
+	public static void main(String[] args) {
+		Client client = new Client();
+		client.communication();
+	}
 }

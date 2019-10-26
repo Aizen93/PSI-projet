@@ -63,4 +63,12 @@ public class User implements Runnable{
 		}
 
 	}
+
+	public Server getServer() {
+		return server;
+	}
+
+	public String getPseudo() {
+		return pseudo;
+	}
 }
