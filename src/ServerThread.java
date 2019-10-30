@@ -127,10 +127,11 @@ public class ServerThread implements Runnable{
 					send();
 					break;
 				case "ANNS" :
-					send = "ANNS";
+					send = "ANNS;";
 					for(Annonce a : serv.getAnnonces()) {
-						send +="###"+a.getType()+"***"+a.getDescription()+"***"+a.getRef()+"***"+a.getPrix()+"***"+a.getLogin();
+						send += a.getType()+"***"+a.getDescription()+"***"+a.getRef()+"***"+a.getPrix()+"***"+a.getLogin()+"###";
 					}
+					System.out.println("ANNS : "+send);
 					send();
 					break;
 				case "MYANNS" :
