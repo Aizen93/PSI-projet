@@ -77,4 +77,8 @@ public class Server {
 		Server.refs++;
 	}
 
+	public void delete_annonce(Annonce a) {
+		annonces.remove(a);
+	}
+
 }

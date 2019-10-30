@@ -76,24 +76,19 @@ public class ServerThread implements Runnable{
 		return true;
 	}
 	
-	private ArrayList<Annonce> my_annonces() {
-		ArrayList<Annonce> tmp = new ArrayList<>();
-		for(Annonce annonce : serv.getAnnonces()) {
-			if(annonce.getLogin() == user.getPseudo()) tmp.add(annonce);
+	private boolean add_annonce(String []tab) {
+		if(user == null)  return false;
+		else {
+			if(tab.length == 4) {
+					serv.addAnnonce(new Annonce(Server.getRefs(), user.getPseudo(), Integer.parseInt(tab[2]), tab[1], tab[3]));
+					Server.increment_refs();
+					return true;	
+			}
+			else return false;
 		}
-		return tmp;
 	}
-	
-	private ArrayList<Annonce> annonces_by_type(String type) {
-		ArrayList<Annonce> tmp = new ArrayList<>();
-		for(Annonce annonce : serv.getAnnonces()) {
-			if(annonce.getType() == type) tmp.add(annonce);
-		}
-		return tmp;
-	}
-	
-	
 
+	
 	
 	public void run(){
 		do {
@@ -105,24 +100,12 @@ public class ServerThread implements Runnable{
 					if(tab.length == 3) {
 						if(connect(tab[1], tab[2])) send = "OK";
 						else send = "FAIL";
-					}else {
-						send = "FAIL";
 					}
-					send();
+					else	send = "FAIL";
 					break;
 				case "ADD" :
-					if(user == null)  send = "FAIL";
-					else {
-						if(tab.length == 4) {
-								Annonce a = new Annonce(Server.getRefs(), user.getPseudo(), Integer.parseInt(tab[2]), tab[1], tab[3]);
-								serv.addAnnonce(a);
-								Server.increment_refs();
-								send = "OK";
-							
-						}
-						else send = "FAIL";
-					}
-					send();
+					if (add_annonce(tab)) send = "OK";
+					else send = "FAIL";
 					break;
 				case "ANNS" :
 					send = "ANNS;";
@@ -130,22 +113,48 @@ public class ServerThread implements Runnable{
 						send += a.getType()+"***"+a.getDescription()+"***"+a.getRef()+"***"+a.getPrix()+"***"+a.getLogin()+"###";
 					}
 					System.out.println("ANNS : "+send);
-					send();
+					break;
+				case "ANN" :
+					send = "ANN;";
+					for(Annonce a : serv.getAnnonces()) {
+						if(tab[1].equals(a.getType())) send += a.getType()+"***"+a.getDescription()+"***"+a.getRef()+"***"+a.getPrix()+"***"+a.getLogin()+"###";
+					}
+					break;
+				case "DELETE" :
+					if(user == null) send = "FAIL";
+					else {
+						for(Annonce a : serv.getAnnonces()) {
+							if(Integer.parseInt(tab[1]) == a.getRef() && (a.getLogin()).equals(user.getPseudo())) {
+								serv.delete_annonce(a);
+								send = "OK";
+							}
+						}
+						send = "OK";
+					}
 					break;
 				case "MYANNS" :
-					send = "MYANNS";
-					for(Annonce a : serv.getAnnonces()) {
-						if(a.getLogin() == user.getPseudo()) send +="###"+a.getType()+"***"+a.getDescription()+"***"+a.getRef()+"***"+a.getPrix()+"***"+a.getLogin();
+					if(user == null) send = "FAIL";
+					else {
+						send = "MYANNS";
+						for(Annonce a : serv.getAnnonces()) {
+							if(a.getLogin() == user.getPseudo()) send +="###"+a.getType()+"***"+a.getDescription()+"***"+a.getRef()+"***"+a.getPrix()+"***"+a.getLogin();
+						}
 					}
 					break;
 				case "DISCONNECT" :
-					user.setConnect(false);
-					user = null;
+					if(user != null) {
+						user.setConnect(false);
+						user = null;
+						send="OK";
+					}
+					else {
+						send = "FAIL";
+					}
 					break;
 				default : 
 					send = "FAIL";
-					send();
 			}
+			send();
 		}while(!mess.equals("QUIT"));
 		pw.println("Au revoir !");
 		pw.flush();
