@@ -53,8 +53,10 @@ class Client {
                 case "ANN":
                     break;
                 case "DELETE":
+                    deleteAnnounce();
                     break;
                 case "ADD":
+                    addAnnounce();
                     break;
                 case "SEND":
                     //TO DO FOR NEXT VERSION
@@ -124,22 +126,57 @@ class Client {
         if(res[0].equals("FAIL")){
             System.out.println("Error receiving ANNS - cause : "+res[1]);
         }else if(res[0].equals("ANNS")){
-            if(res[1].length() == 0){
+            if(res.length == 1){
                 System.out.println("Nothing published yet, use ADD to be the first to publish an annouce");
             }else{
                 System.out.println("All announces online :");
-                String[] tmp = res[1].split("***");
+                String[] tmp = res[1].split("###");
                 for(int i = 0; i < tmp.length; i++){
+                    System.out.println("++++++++"+tmp[i]);
+                    String [] src = tmp[i].split("\\*\\*\\*");
+                    
                     System.out.println("+----------------------------------------------+");
-                    System.out.println("| Reference : " + tmp[2]);
-                    System.out.println("| Domain : " + tmp[0]);
-                    System.out.println("| Price: " + tmp[3]);
-                    System.out.println("| Owner: " + tmp[4]);
-                    System.out.println("| Description : " + tmp[1]);
+                    System.out.println("| Reference : " + src[2]);
+                    System.out.println("| Domain : " + src[0]);
+                    System.out.println("| Price: " + src[3]);
+                    System.out.println("| Owner: " + src[4]);
+                    System.out.println("| Description : " + src[1]);
                     System.out.println("+----------------------------------------------+");
                 }
             }
+        }else{
+            System.out.println("BAD RESPONSE");
         }
+    }
+    
+    private void addAnnounce(){
+        if(!mode_disconnected){
+            System.out.println("Please fill the form bellow: ");
+            System.out.print(">> domain : ");
+            String domain = sc.nextLine();
+            System.out.print(">> price : ");
+            String price = sc.nextLine();
+            System.out.print(">> description : ");
+            String description = sc.nextLine();
+            
+            message_to_send = "ADD;" + domain + ";" + price + ";" + description;
+            send(message_to_send);
+            read();
+            if(message_received.equals("OK")){
+                System.out.println("Announce added succefully !");
+            }else if(message_received.equals("FAIL")){
+                System.out.println("Failed adding the announce !");
+            }
+        }else{
+            System.out.println("You are not logged in to add an announce");
+        }
+    }
+    
+    private void deleteAnnounce(){
+        System.out.println(">> enter the announce's reference : ");
+        message_to_send = "DELETE;";
+        message_to_send += sc.nextLine();
+        
     }
 
     private void close() {
