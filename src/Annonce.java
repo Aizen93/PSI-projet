@@ -1,19 +1,22 @@
+package src;
+
 
 public class Annonce {
 	
-	private int id;
+	private int ref,prix;
 	private String login, type, description;
 	private boolean dispo;
 	
-	public Annonce(int id, String login, String type, String description) {
-		this.id = id;
+	public Annonce(int ref, String login, int prix, String type, String description) {
+		this.ref = ref;
 		this.login = login;
 		this.setType(type);
 		this.setDescription(description);
+		dispo = true;
 	}
 
-	public int getId() {
-		return id;
+	public int getRef() {
+		return ref;
 	}
 
 	public String getType() {
@@ -42,6 +45,10 @@ public class Annonce {
 
 	public void setDispo(boolean dispo) {
 		this.dispo = dispo;
+	}
+
+	public int getPrix() {
+		return prix;
 	}
 	
 	
