@@ -43,7 +43,7 @@ public class User implements Runnable{
 			pw.flush();
 			pw.println("Vous êtes actuellement "+nb_connecte+" utilisateur(s) connecté(s). (Pour quitter envoyer quit)");
 			pw.flush();
-			System.out.println("Utlisateur : " +id_client);
+			System.out.println("Utilisateur : " +id_client);
 			String mess;
 			while(!(mess = br.readLine()).equals("DISCONNECT")){
 				if(mess.equals("MENU")) {
