@@ -11,6 +11,8 @@ class Client {
     private String message_received, send;
     private boolean exit;
     private boolean mode_disconnected;
+    private String command = "";
+    private String message_to_send = "";
 
     public Client() {
         exit = false;
@@ -33,65 +35,109 @@ class Client {
 
     public void communication() {
         //read();
-        String command = "";
-        String message_to_send = "";
-        String username = "";
-        String password = "";
         while(!exit) {
             System.out.print("> Enter a command: ");
             command = sc.nextLine();
             switch (command) {
                 case "DISCONNECT":
-                    if(!mode_disconnected){
-                        send(command);
-                        read();
-                        if(message_received.equals("OK")) {
-                            close();
-                            mode_disconnected = true;
-                            System.out.println("################");
-                            System.out.println("# Disconnected #");
-                            System.out.println("################");
-                            System.out.println("Now, you can only request public annouces but can't interact with anything else !");  
-                        } else {
-                            System.out.println("ERROR, Bad server response, couldn't disconnect");
-                            close();
-                            System.exit(1);
-                        }
-                    }else{
-                        System.out.println("You are not logged in to disconnect");
-                    }
+                    disconnect();
                     break;
                 case "CONNECT":
-                    if(mode_disconnected){
-                        System.out.println("Please fill the form bellow :");
-                        System.out.print(">> Login: ");
-                        username = sc.nextLine();
-                        //System.out.print(">> Password: ");
-                        //password = sc.nextLine();
-                        Console console = System.console();
-
-                        password = new String(console.readPassword(">> Password: "));
-
-
-
-                        message_to_send = "CONNECT;" + username + ";" + password;
-                        send(message_to_send);
-                        read();
-                        if(message_received.equals("OK")){
-                            mode_disconnected = false;
-                            System.out.println("############################");
-                            System.out.println("# Connection successfull ! #");
-                            System.out.println("############################");
-                        }else if(message_received.equals("FAIL")){
-                            System.out.println("Couldn't connect to the server, try again !");
-                        }
-                    }else{
-                        System.out.println("You are alrady logged in, nothing to be done");
-                    }
+                    connecte();
+                    break;
+                case "ANNS":
+                    getAllAnnounces();
+                    break;
+                case "MYANNS":
+                    break;
+                case "ANN":
+                    break;
+                case "DELETE":
+                    break;
+                case "ADD":
+                    break;
+                case "SEND":
+                    //TO DO FOR NEXT VERSION
                     break;
                 default:
                     System.out.println("Wrong command !");
                     break;
+            }
+        }
+    }
+    
+    private void disconnect(){
+        if(!mode_disconnected){
+            send(command);
+            read();
+            if(message_received.equals("OK")) {
+                close();
+                mode_disconnected = true;
+                System.out.println("################");
+                System.out.println("# Disconnected #");
+                System.out.println("################");
+                System.out.println("Now, you can only request public annouces but can't interact with anything else !");  
+            } else {
+                System.out.println("ERROR, Bad server response, couldn't disconnect");
+                close();
+                System.exit(1);
+            }
+        }else{
+            System.out.println("You are not logged in to disconnect");
+        }
+    }
+    
+    private void connecte(){
+        String username = "";
+        String password = "";
+        if(mode_disconnected){
+            System.out.println("Please fill the form bellow :");
+            System.out.print(">> Login: ");
+            username = sc.nextLine();
+            //System.out.print(">> Password: ");
+            //password = sc.nextLine();
+            Console console = System.console();
+
+            password = new String(console.readPassword(">> Password: "));
+
+            message_to_send = "CONNECT;" + username + ";" + password;
+            send(message_to_send);
+            read();
+            if(message_received.equals("OK")){
+                mode_disconnected = false;
+                System.out.println("############################");
+                System.out.println("# Connection successfull ! #");
+                System.out.println("############################");
+            }else if(message_received.equals("FAIL")){
+                System.out.println("Couldn't connect to the server, try again !");
+            }
+        }else{
+            System.out.println("You are alrady logged in, nothing to be done");
+        }
+    }
+    
+    private void getAllAnnounces(){
+        message_to_send = "ANNS";
+        send(message_to_send);
+        read();
+        String[] res = message_received.split(";");
+        if(res[0].equals("FAIL")){
+            System.out.println("Error receiving ANNS - cause : "+res[1]);
+        }else if(res[0].equals("MYANNS")){
+            if(res[1].length() == 0){
+                System.out.println("Nothing published yet, use ADD to be the first to publish an annouce");
+            }else{
+                System.out.println("All announces online :");
+                String[] tmp = res[1].split("***");
+                for(int i = 0; i < tmp.length; i++){
+                    System.out.println("+----------------------------------------------+");
+                    System.out.println("| Reference : " + tmp[2]);
+                    System.out.println("| Domain : " + tmp[0]);
+                    System.out.println("| Price: " + tmp[3]);
+                    System.out.println("| Owner: " + tmp[4]);
+                    System.out.println("| Description : " + tmp[1]);
+                    System.out.println("+----------------------------------------------+");
+                }
             }
         }
     }
