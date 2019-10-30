@@ -123,7 +123,7 @@ class Client {
         String[] res = message_received.split(";");
         if(res[0].equals("FAIL")){
             System.out.println("Error receiving ANNS - cause : "+res[1]);
-        }else if(res[0].equals("MYANNS")){
+        }else if(res[0].equals("ANNS")){
             if(res[1].length() == 0){
                 System.out.println("Nothing published yet, use ADD to be the first to publish an annouce");
             }else{
