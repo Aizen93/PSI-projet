@@ -11,6 +11,7 @@ public class Annonce {
 		this.ref = ref;
 		this.login = login;
 		this.setType(type);
+		this.prix = prix;
 		this.setDescription(description);
 		dispo = true;
 	}
