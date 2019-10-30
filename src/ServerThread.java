@@ -22,8 +22,7 @@ public class ServerThread implements Runnable{
 	
 	public ServerThread(Server serv, Socket s) {
 		this.so = s;
-		this.serv = serv;
-		Server.increment_connecte();
+		this.serv= serv;
 		buffered();
 		this.user = null;
 	}
@@ -60,6 +59,7 @@ public class ServerThread implements Runnable{
 	
 	
 	private boolean connect(String pseudo, String mdp) {
+		System.out.println("pseudo : "+pseudo+", mdp : "+mdp);
 		for(User u : serv.getUsers()) {
 			if(u.getPseudo() == pseudo) {
 				if (u.getMdp() == mdp) {
@@ -96,8 +96,8 @@ public class ServerThread implements Runnable{
 
 	
 	public void run(){
-		String[]tab;
 		do {
+			String[]tab;
 			read();
 			tab = mess.split(";");
 			switch(tab[0]) {
@@ -114,13 +114,11 @@ public class ServerThread implements Runnable{
 					if(user == null)  send = "FAIL";
 					else {
 						if(tab.length == 4) {
-							if(connect(tab[1], tab[2])) {
 								Annonce a = new Annonce(Server.getRefs(), user.getPseudo(), Integer.parseInt(tab[2]), tab[1], tab[3]);
 								serv.addAnnonce(a);
 								Server.increment_refs();
 								send = "OK";
-							}
-							else send = "FAIL";
+							
 						}
 						else send = "FAIL";
 					}
@@ -149,7 +147,6 @@ public class ServerThread implements Runnable{
 					send();
 			}
 		}while(!mess.equals("QUIT"));
-		Server.decrement_connecte();
 		pw.println("Au revoir !");
 		pw.flush();
 		pw.close();
