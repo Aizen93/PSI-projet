@@ -1,5 +1,3 @@
-package TP1;
-
 import java.io.*;
 import java.net.*;
 import java.util.Scanner;
@@ -16,12 +14,14 @@ public class ClientTCP {
 	private Socket socket;
 	private InputStream inputStream;
 	private OutputStream outputStream;
+	private PrintWriter pw;
 
 	public ClientTCP() {
 		try {
 			this.socket = new Socket("localhost", this.portTCPServer);
 			this.inputStream = socket.getInputStream();
 			this.outputStream = socket.getOutputStream();
+            pw=new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
 		} catch(Exception e) {
 			System.out.println("Connexion impossible");
 			// e.printStackTrace(); //DEBUG
@@ -38,20 +38,17 @@ public class ClientTCP {
 		inFromUser.close();
 		try {
 			String message = "CONNECT;"+pseudo+";"+mdp;
+			pw.write(message);
 			// Ecriture et envoi du message
-			outputStream.write(message.getBytes());
-			outputStream.flush();
+//			outputStream.write(message.getBytes());
+//			outputStream.flush();
             // Tableau de byte qu'on recoit avec le read()
-            byte[] msgReceivedBytes = new byte[4];
-            // Lecture du message
-            inputStream.read(msgReceivedBytes);
-			String msgReceived = byteToString(msgReceivedBytes);
-            System.out.println();
+//            byte[] msgReceivedBytes = new byte[4];
+//            // Lecture du message
+//            inputStream.read(msgReceivedBytes);
+//			String msgReceived = byteToString(msgReceivedBytes);
+//            System.out.println();
 			return true;
-		} catch (IOException e) {
-			e.printStackTrace();
-			System.err.print("Impossible de se connecter au serveur");
-			return false;
 		} catch (NullPointerException e) {
 			System.err.println("Vous n'etes plus connecté au serveur");
 			return false;
