@@ -8,18 +8,18 @@ class Client {
     private BufferedReader br;
     private PrintWriter pw;
     private Scanner sc;
-    private String message_received, send;
+    private String message_received;
     private boolean exit;
     private boolean mode_disconnected;
     private String command = "";
-    private String message_to_send = "";
+    private String message_to_send;
 
     public Client() {
-        exit = false;
-        mode_disconnected = true;
+        this.exit = false;
+        this.mode_disconnected = true;
         connection();
         buffered();
-        sc = new Scanner(System.in);
+        this.sc = new Scanner(System.in);
     }
 
     public void menu() {
@@ -46,11 +46,13 @@ class Client {
                     connecte();
                     break;
                 case "ANNS":
-                    getAllAnnounces();
+                    getAllAnnounces("ANNS");
                     break;
                 case "MYANNS":
+                    getAllAnnounces("MYANNS");
                     break;
                 case "ANN":
+                    getAllAnnounces("ANN");
                     break;
                 case "DELETE":
                     deleteAnnounce();
@@ -60,6 +62,9 @@ class Client {
                     break;
                 case "SEND":
                     //TO DO FOR NEXT VERSION
+                    break;
+                case "QUIT":
+                    quitApply();
                     break;
                 default:
                     System.out.println("Wrong command !");
@@ -89,9 +94,22 @@ class Client {
         }
     }
     
+    private void quitApply(){
+        message_to_send = "QUIT";
+        send(message_to_send);
+        read();
+        if(message_received.equals("OK")){
+            System.out.println("Server connexion destroyed.... see you soon... BYE !");
+            System.exit(1);
+        }else{
+            System.out.println("BAD SERVER RESPONSE, destroying everything... BYE");
+            System.exit(1);
+        }
+    }
+    
     private void connecte(){
-        String username = "";
-        String password = "";
+        String username;
+        String password;
         if(mode_disconnected){
             System.out.println("Please fill the form bellow :");
             System.out.print(">> Login: ");
@@ -99,7 +117,6 @@ class Client {
             //System.out.print(">> Password: ");
             //password = sc.nextLine();
             Console console = System.console();
-
             password = new String(console.readPassword(">> Password: "));
 
             message_to_send = "CONNECT;" + username + ";" + password;
@@ -112,27 +129,33 @@ class Client {
                 System.out.println("############################");
             }else if(message_received.equals("FAIL")){
                 System.out.println("Couldn't connect to the server, try again !");
+            }else{
+                System.out.println("SERVER BAD RESPONSE");
             }
         }else{
             System.out.println("You are alrady logged in, nothing to be done");
         }
     }
     
-    private void getAllAnnounces(){
-        message_to_send = "ANNS";
+    private void getAllAnnounces(String command){
+        message_to_send = command;
+        if(command.equals("ANN")){
+            System.out.println("Please fill the form bellow : ");
+            System.out.println(">> Filter (Key word) : ");
+            message_to_send += ";"+sc.nextLine();
+        }
         send(message_to_send);
         read();
         String[] res = message_received.split(";");
         if(res[0].equals("FAIL")){
-            System.out.println("Error receiving ANNS - cause : "+res[1]);
-        }else if(res[0].equals("ANNS")){
+            System.out.println("Error receiving " + command + " - cause : "+res[1]);
+        }else if(res[0].equals(command)){
             if(res.length == 1){
                 System.out.println("Nothing published yet, use ADD to be the first to publish an annouce");
             }else{
                 System.out.println("All announces online :");
                 String[] tmp = res[1].split("###");
                 for(int i = 0; i < tmp.length; i++){
-                    System.out.println("++++++++"+tmp[i]);
                     String [] src = tmp[i].split("\\*\\*\\*");
                     
                     System.out.println("+----------------------------------------------+");
@@ -145,8 +168,12 @@ class Client {
                 }
             }
         }else{
-            System.out.println("BAD RESPONSE");
+            System.out.println("SERVER BAD RESPONSE");
         }
+    }
+    
+    private boolean isNumeric(String str) { 
+        return str.matches("-?\\d+(\\.\\d+)?");
     }
     
     private void addAnnounce(){
@@ -154,8 +181,11 @@ class Client {
             System.out.println("Please fill the form bellow: ");
             System.out.print(">> domain : ");
             String domain = sc.nextLine();
-            System.out.print(">> price : ");
-            String price = sc.nextLine();
+            String price = "";
+            while(!isNumeric(price)){
+                System.out.print(">> price : ");
+                price = sc.nextLine();
+            }
             System.out.print(">> description : ");
             String description = sc.nextLine();
             
@@ -166,6 +196,8 @@ class Client {
                 System.out.println("Announce added succefully !");
             }else if(message_received.equals("FAIL")){
                 System.out.println("Failed adding the announce !");
+            }else{
+                System.out.println("SERVER BAD RESPONSE");
             }
         }else{
             System.out.println("You are not logged in to add an announce");
@@ -173,11 +205,24 @@ class Client {
     }
     
     private void deleteAnnounce(){
-        System.out.println(">> enter the announce's reference : ");
-        message_to_send = "DELETE;";
-        message_to_send += sc.nextLine();
-        
+        if(!mode_disconnected){
+            System.out.println(">> enter the announce's reference : ");
+            message_to_send = "DELETE;";
+            message_to_send += sc.nextLine();
+            send(message_to_send);
+            read();
+            if(message_received.equals("OK")){
+                System.out.println("Announce deleted succesfully !");
+            }else if(message_to_send.equals("FAIL")){
+                System.out.println("Failed deleting the announce");
+            }else{
+                System.out.println("SERVER BAD RESPONSE");
+            }  
+        }else{
+            System.out.println("You are not logged in to delete an announce");
+        }
     }
+    
 
     private void close() {
         pw.close();
