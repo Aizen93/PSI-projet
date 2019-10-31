@@ -134,9 +134,11 @@ public class ServerThread implements Runnable{
 							if(Integer.parseInt(tab[1]) == a.getRef() && (a.getLogin()).equals(user.getPseudo())) {
 								serv.delete_annonce(a);
 								send = "OK";
+								send();
+								break;
 							}
 						}
-						send = "OK";
+						send = "FAIL";
 					}
 					send();
 					break;
