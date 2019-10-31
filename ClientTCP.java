@@ -25,9 +25,103 @@ public class ClientTCP {
 		} catch(Exception e) {
 			System.out.println("Connexion impossible");
 			// e.printStackTrace(); //DEBUG
+		}	
+	}
+	
+	public static void main(String[] args) throws Exception {
+		ClientTCP clientTCP = new ClientTCP();
+		Scanner inFromUser = new Scanner(System.in);
+		boolean connected = true;
+		String commande;
+		while(connected) {
+			System.out.println("Entrez votre choix : 1 - Connect, 2 - Disconnect, 3 - Add annonce, 4 - Voir toutes les annonces,"
+					+ " 5 - Voir mes annonces, 6 - Voir les annonces avec filtre, 7 - ");
+			commande = inFromUser.nextLine();
+			switch(commande) {
+				case "1":
+					clientTCP.connect();
+					break;
+				case "2":
+					clientTCP.disconnect();
+					break;
+				case "3":
+					clientTCP.addAnnonce();
+					break;
+				case "4":
+					clientTCP.allAnnonce();
+					break;
+				case "5":
+					clientTCP.myAnnonce();
+					break;
+				case "6":
+					clientTCP.filterAnnonce();
+					break;
+				default:
+					connected = false; 
+					break;
+					
+			}
+//				
+//			} else {
+//				System.err.println("Connection echoué");
+//			}
+			
 		}
 		
+//		Socket socket = null;
+//		BufferedReader br = null;
+//		BufferedReader is = null;
+//		PrintWriter os = null;
+//
+//		try {
+//			socket = new Socket("localhost", 1027); 
+//			br = new BufferedReader(new InputStreamReader(System.in));
+//			is = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+//			os = new PrintWriter(socket.getOutputStream());
+//		}
+//		catch (IOException e){
+//			System.err.print("Impossible de se connecter au serveur");
+//		}
+
+//		System.out.println("Pour quitter votre session taper la lettre d s'il vous plait");
+//
+//		try{
+//			String response = is.readLine();
+//			System.out.println("Serveur Respond : "+response);
+//			boolean b = false;
+//			while(!b){
+//				String str = br.readLine();
+//				os.println(str);
+//				os.flush();
+//				if(str.equals("d")){
+//					try{
+//						socket.close();
+//						b = true;
+//						return;
+//					}catch(Exception e){
+//
+//					}
+//				}
+//				response = is.readLine();
+//				System.out.println("Serveur Respond : "+response);
+//
+//			}
+//			is.close();
+//			os.close();
+//			socket.close();
+//		}catch(IOException e){
+//			System.out.println("Socket lit une erreur");
+//		}catch(NullPointerException e) {
+//			System.out.println("Serveur introuvable");
+//		}
+//		finally{
+//			is.close();
+//			os.close();
+//			socket.close();
+//			System.out.println("connexion fermée");
+//		}
 	}
+
 	
 	public boolean connect() {
 		Scanner inFromUser = new Scanner(System.in);
@@ -186,71 +280,6 @@ public class ClientTCP {
 		}
 	}
 
-	public static void main(String[] args) throws Exception {
-		ClientTCP clientTCP = new ClientTCP();
-		Scanner inFromUser = new Scanner(System.in);
-		System.out.println("Entrez votre choix : 1 - Connect, 2 - Disconnect, 3 - Add annonce, 4 - Voir toutes les annonces,"
-				+ " 5 - Voir mes annonces, 6 - Voir les annonces avec filtre, 7 - ");
-		
-		if(clientTCP.connect()) {
-			
-		} else {
-			System.err.println("Connection echoué");
-		}
-		
-//		Socket socket = null;
-//		BufferedReader br = null;
-//		BufferedReader is = null;
-//		PrintWriter os = null;
-//
-//		try {
-//			socket = new Socket("localhost", 1027); 
-//			br = new BufferedReader(new InputStreamReader(System.in));
-//			is = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-//			os = new PrintWriter(socket.getOutputStream());
-//		}
-//		catch (IOException e){
-//			System.err.print("Impossible de se connecter au serveur");
-//		}
-
-//		System.out.println("Pour quitter votre session taper la lettre d s'il vous plait");
-//
-//		try{
-//			String response = is.readLine();
-//			System.out.println("Serveur Respond : "+response);
-//			boolean b = false;
-//			while(!b){
-//				String str = br.readLine();
-//				os.println(str);
-//				os.flush();
-//				if(str.equals("d")){
-//					try{
-//						socket.close();
-//						b = true;
-//						return;
-//					}catch(Exception e){
-//
-//					}
-//				}
-//				response = is.readLine();
-//				System.out.println("Serveur Respond : "+response);
-//
-//			}
-//			is.close();
-//			os.close();
-//			socket.close();
-//		}catch(IOException e){
-//			System.out.println("Socket lit une erreur");
-//		}catch(NullPointerException e) {
-//			System.out.println("Serveur introuvable");
-//		}
-//		finally{
-//			is.close();
-//			os.close();
-//			socket.close();
-//			System.out.println("connexion fermée");
-//		}
-	}
 	
 	//------------------------------------------------------------------------------------------------------------
 
