@@ -9,209 +9,138 @@ import java.util.Scanner;
 public class ClientTCP {
 	//Instanciation des options du serveur auquel on se connecte
 	private int portTCPServer = 1027;
-	
+
 	//Instanciation des elements de communications avec le serveurs
 	private Socket socket;
-	private InputStream inputStream;
-	private OutputStream outputStream;
-	private PrintWriter pw;
+	private PrintWriter printWriter;
+	private BufferedReader bufferedReader;
+	public Scanner inFromUser;
+
 
 	public ClientTCP() {
 		try {
 			this.socket = new Socket("localhost", this.portTCPServer);
-			this.inputStream = socket.getInputStream();
-			this.outputStream = socket.getOutputStream();
-            pw=new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
+			printWriter = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
+			bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+			inFromUser = new Scanner(System.in);
 		} catch(Exception e) {
 			System.out.println("Connexion impossible");
 			// e.printStackTrace(); //DEBUG
 		}	
 	}
-	
+
 	public static void main(String[] args) throws Exception {
 		ClientTCP clientTCP = new ClientTCP();
-		Scanner inFromUser = new Scanner(System.in);
+		clientTCP.inFromUser = new Scanner(System.in);
 		boolean connected = true;
 		String commande;
 		while(connected) {
 			System.out.println("Entrez votre choix : 1 - Connect, 2 - Disconnect, 3 - Add annonce, 4 - Voir toutes les annonces,"
-					+ " 5 - Voir mes annonces, 6 - Voir les annonces avec filtre, 7 - ");
-			commande = inFromUser.nextLine();
+					+ " 5 - Voir mes annonces,\n 6 - Voir les annonces avec filtre, 7 - Supprimer une annonce");
+			commande = clientTCP.inFromUser.nextLine();
 			switch(commande) {
-				case "1":
-					clientTCP.connect();
-					break;
-				case "2":
-					clientTCP.disconnect();
-					break;
-				case "3":
-					clientTCP.addAnnonce();
-					break;
-				case "4":
-					clientTCP.allAnnonce();
-					break;
-				case "5":
-					clientTCP.myAnnonce();
-					break;
-				case "6":
-					clientTCP.filterAnnonce();
-					break;
-				default:
-					connected = false; 
-					break;
-					
-			}
-//				
-//			} else {
-//				System.err.println("Connection echoué");
-//			}
-			
-		}
-		
-//		Socket socket = null;
-//		BufferedReader br = null;
-//		BufferedReader is = null;
-//		PrintWriter os = null;
-//
-//		try {
-//			socket = new Socket("localhost", 1027); 
-//			br = new BufferedReader(new InputStreamReader(System.in));
-//			is = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-//			os = new PrintWriter(socket.getOutputStream());
-//		}
-//		catch (IOException e){
-//			System.err.print("Impossible de se connecter au serveur");
-//		}
+			case "1":
+				clientTCP.connect();
+				break;
+			case "2":
+				clientTCP.disconnect();
+				break;
+			case "3":
+				clientTCP.addAnnonce();
+				break;
+			case "4":
+				clientTCP.allAnnonce("ALLANNS");
+				break;
+			case "5":
+				clientTCP.allAnnonce("MYYANNS");
+				break;
+			case "6":
+				clientTCP.allAnnonce("ANNONCE");
+				break;
+			case "7":
+				clientTCP.deleteAnnonce();
+				break;
+			default:
+				connected = false; 
+				break;
 
-//		System.out.println("Pour quitter votre session taper la lettre d s'il vous plait");
-//
-//		try{
-//			String response = is.readLine();
-//			System.out.println("Serveur Respond : "+response);
-//			boolean b = false;
-//			while(!b){
-//				String str = br.readLine();
-//				os.println(str);
-//				os.flush();
-//				if(str.equals("d")){
-//					try{
-//						socket.close();
-//						b = true;
-//						return;
-//					}catch(Exception e){
-//
-//					}
-//				}
-//				response = is.readLine();
-//				System.out.println("Serveur Respond : "+response);
-//
-//			}
-//			is.close();
-//			os.close();
-//			socket.close();
-//		}catch(IOException e){
-//			System.out.println("Socket lit une erreur");
-//		}catch(NullPointerException e) {
-//			System.out.println("Serveur introuvable");
-//		}
-//		finally{
-//			is.close();
-//			os.close();
-//			socket.close();
-//			System.out.println("connexion fermée");
-//		}
+			}
+		}
 	}
 
-	
+
 	public boolean connect() {
-		Scanner inFromUser = new Scanner(System.in);
 		System.out.println("Entrez votre pseudo : ");
 		String pseudo = inFromUser.nextLine();
 		System.out.println("Entrez votre mdp");
 		String mdp = inFromUser.nextLine();
-		inFromUser.close();
 		try {
-			String message = "CONNECT;"+pseudo+";"+mdp;
-			pw.write(message);
 			// Ecriture et envoi du message
-//			outputStream.write(message.getBytes());
-//			outputStream.flush();
-            // Tableau de byte qu'on recoit avec le read()
-//            byte[] msgReceivedBytes = new byte[4];
-//            // Lecture du message
-//            inputStream.read(msgReceivedBytes);
-//			String msgReceived = byteToString(msgReceivedBytes);
-//            System.out.println();
+			String message = "CONNECT;"+pseudo+";"+mdp;
+			printWriter.println(message);
+			printWriter.flush();
+			//Lecture
+			String reception = bufferedReader.readLine();
+			if(reception.equals("OK")) {
+				System.out.println("Connection réussi");
+			} else if(reception.equals("FAIL")) {
+				System.out.println("Connection echoué");
+			}
+			else {
+				System.out.println("Message Inconnu");
+				return false;
+			}
 			return true;
 		} catch (NullPointerException e) {
 			System.err.println("Vous n'etes plus connecté au serveur");
 			return false;
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.err.println("Mauvaise lecture");
+			return false;
 		}
-		
+
 	}
-	
+
 	public boolean disconnect() {	
 		try {
-			String message = "DISCONNECT";
-			outputStream.write(message.getBytes());
-			outputStream.flush();
-			return true;
-		} catch (IOException e) {
-			e.printStackTrace();
-			System.err.print("Impossible de se connecter au serveur");
-			return false;
+			String message = "DISCONN";
+			printWriter.println(message);
+			printWriter.flush();
+			//Lecture
+			String reception = bufferedReader.readLine();
+			if(reception.equals("OK")) {
+				System.out.println("Déconnection réussi");
+			}			return true;
 		} catch (NullPointerException e) {
 			System.err.println("Vous n'etes plus connecté au serveur");
 			return false;
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.err.println("Deconnection impossible");
+			return false;
 		}
 	}
-	
+
 	public boolean allAnnonce() {
 		try {
-			String message = "ANNS";
-			outputStream.write(message.getBytes());
-			outputStream.flush();
+			String message = "ALLANNS";
+			printWriter.println(message);
+			printWriter.flush();
 			return true;
-		} catch (IOException e) {
-			e.printStackTrace();
-			System.err.print("Impossible de se connecter au serveur");
 		} catch (NullPointerException e) {
 			System.err.println("Vous n'etes plus connecté au serveur");
 		} finally {
 			return false;
 		}
 	}
-	
+
 	public boolean myAnnonce() {
 		try {
-			String message = "MYANNS";
-			outputStream.write(message.getBytes());
-			outputStream.flush();
+			String message = "MYYANNS";
+			printWriter.println(message);
+			printWriter.flush();
 			return true;
-		} catch (IOException e) {
-			e.printStackTrace();
-			System.err.print("Impossible de se connecter au serveur");
-		} catch (NullPointerException e) {
-			System.err.println("Vous n'etes plus connecté au serveur");
-		} finally {
-			return false;
-		}
-		
-	}
-	
-	public boolean filterAnnonce() {
-		Scanner inFromUser = new Scanner(System.in);
-		System.out.println("Entrez le type : ");
-		String type = inFromUser.nextLine();
-		inFromUser.close();
-		try {
-			String message = "ANN;"+type;
-			outputStream.write(message.getBytes());
-			outputStream.flush();
-			return true;
-		} catch (IOException e) {
-			e.printStackTrace();
-			System.err.print("Impossible de se connecter au serveur");
 		} catch (NullPointerException e) {
 			System.err.println("Vous n'etes plus connecté au serveur");
 		} finally {
@@ -219,60 +148,93 @@ public class ClientTCP {
 		}
 
 	}
-	
+
+	public boolean allAnnonce(String annonce) {
+		String message = annonce;
+		if(annonce.equals("ANNONCE")) {
+			System.out.println("Entrez le type : ");
+			String type = inFromUser.nextLine();			
+			message +=";" + type;
+		} 
+		try {
+			printWriter.println(message);
+			printWriter.flush();
+			//Lecture
+			String reception = bufferedReader.readLine();
+	        String[] res = reception.split(";");
+	        if(res[0].equals("FAIL")){
+	            System.out.println("Error receiving " + annonce );
+	        }else if(res[0].equals(annonce)){
+	            if(res.length == 1 ){
+	                System.out.println("Nothing published yet, use ADDANNS to be the first to publish an annouce");
+	            }else if(res.length > 1){
+	                System.out.println("All announces online :");
+	                String[] tmp = res[1].split("###");
+	                for(int i = 0; i < tmp.length; i++){
+	                    String [] src = tmp[i].split("\\*\\*\\*");
+	                    
+	                    System.out.println("+----------------------------------------------+");
+	                    System.out.println("| Reference : " + src[2]);
+	                    System.out.println("| Domain : " + src[0]);
+	                    System.out.println("| Price: " + src[3]);
+	                    System.out.println("| Owner: " + src[4]);
+	                    System.out.println("| Description : " + src[1]);
+	                    System.out.println("+----------------------------------------------+");
+	                }
+	            }
+	        }else{
+	            System.out.println("SERVER BAD RESPONSE");
+	        }
+			return true;
+		} catch (NullPointerException e) {
+			System.err.println("Vous n'etes plus connecté au serveur");
+		} finally {
+			return false;
+		}
+
+	}
+
 	public boolean deleteAnnonce() {
-		Scanner inFromUser = new Scanner(System.in);
 		System.out.println("Entrez la ref : ");
 		String ref = inFromUser.nextLine();
-		inFromUser.close();
 		try {
-			String message = "DELETE;"+ref;
-			outputStream.write(message.getBytes());
-			outputStream.flush();
+			String message = "DELANNS;"+ref;
+			printWriter.println(message);
+			printWriter.flush();
+			//Lecture
+			String reception = bufferedReader.readLine();
+			if(reception.equals("OK")) {
+				System.out.println("Annonce supprimé");
+			} else if(reception.equals("FAIL")){
+				System.out.println("Annonce pas supprimé");
+			}
 			return true;
-		} catch (IOException e) {
-			e.printStackTrace();
-			System.err.print("Impossible de se connecter au serveur");
 		} catch (NullPointerException e) {
 			System.err.println("Vous n'etes plus connecté au serveur");
 		} finally {
 			return false;
 		}
 	}
-	
+
 	public boolean addAnnonce() {
-		Scanner inFromUser = new Scanner(System.in);
 		System.out.println("Entrez le domaine : ");
 		String domaine = inFromUser.nextLine();
 		System.out.println("Entrez le prix : ");
 		String prix = inFromUser.nextLine();
 		System.out.println("Entrez la description : ");
 		String description = inFromUser.nextLine();
-		inFromUser.close();
 		try {
-			String message = "ADD;"+domaine+";"+prix+";"+description;
-			outputStream.write(message.getBytes());
-			outputStream.flush();
+			String message = "ADDANNS;"+domaine+";"+prix+";"+description;
+			printWriter.println(message);
+			printWriter.flush();
+			//Lecture
+			String reception = bufferedReader.readLine();
+			if(reception.equals("OK")) {
+				System.out.println("Annonce ajouté");
+			} else if(reception.equals("FAIL")){
+				System.out.println("Annonce rejeté");
+			}
 			return true;
-		} catch (IOException e) {
-			e.printStackTrace();
-			System.err.print("Impossible de se connecter au serveur");
-		} catch (NullPointerException e) {
-			System.err.println("Vous n'etes plus connecté au serveur");
-		} finally {
-			return false;
-		}
-	}
-	
-	public boolean consultMess() {
-		try {
-			String message = "CONSU";
-			outputStream.write(message.getBytes());
-			outputStream.flush();
-			return true;
-		} catch (IOException e) {
-			e.printStackTrace();
-			System.err.print("Impossible de se connecter au serveur");
 		} catch (NullPointerException e) {
 			System.err.println("Vous n'etes plus connecté au serveur");
 		} finally {
@@ -280,43 +242,65 @@ public class ClientTCP {
 		}
 	}
 
-	
+	public boolean consultMess() {
+		try {
+			String message = "CONSU";
+			printWriter.println(message);
+			printWriter.flush();
+			return true;
+		} catch (NullPointerException e) {
+			System.err.println("Vous n'etes plus connecté au serveur");
+		} finally {
+			return false;
+		}
+	}
+
+
 	//------------------------------------------------------------------------------------------------------------
 
 	public Socket getSocket() {
 		return socket;
 	}
-	
+
 	public void setSocket(Socket socket) {
 		this.socket = socket;
 	}
-	
-	public InputStream getInputStream() {
-		return inputStream;
+
+	public BufferedReader getBufferedReader() {
+		return bufferedReader;
 	}
 
-	public void setInputStream(InputStream inputStream) {
-		this.inputStream = inputStream;
+	public void setBufferedReader(BufferedReader bufferedReader) {
+		this.bufferedReader = bufferedReader;
 	}
 
-	public OutputStream getOutputStream() {
-		return outputStream;
+	public int getPortTCPServer() {
+		return portTCPServer;
 	}
-	
-	public void setOutputStream(OutputStream outputStream) {
-		this.outputStream = outputStream;
+
+	public void setPortTCPServer(int portTCPServer) {
+		this.portTCPServer = portTCPServer;
 	}
-	
+
+	public PrintWriter getPrintWriter() {
+		return printWriter;
+	}
+
+	public void setPrintWriter(PrintWriter printWriter) {
+		this.printWriter = printWriter;
+	}
+
 	//------------------------------------------------------------------------------------------------------------
 	//Cree un String a partir d'un tableau de Bytes
 	public String byteToString(byte[] messageByte) {
 		return new String(messageByte);
 	}
-	
+
 	//Cree un String en prenant les valeurs du tableau de byte de debut a offset(fin)
 	public String byteToString(byte[] messageByte,int debut, int offset) {
 		return new String(messageByte,debut,offset);
 	}
+
 
 }	
 
