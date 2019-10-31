@@ -1,5 +1,3 @@
-package src;
-
 import java.net.*;
 import java.io.*;
 import java.util.*;
@@ -142,7 +140,7 @@ class Client {
         message_to_send = command;
         if(command.equals("ANN")){
             System.out.println("Please fill the form bellow : ");
-            System.out.println(">> Filter (Key word) : ");
+            System.out.print(">> Filter (Key word) : ");
             message_to_send += ";"+sc.nextLine();
         }
         send(message_to_send);
@@ -207,7 +205,7 @@ class Client {
     
     private void deleteAnnounce(){
         if(!mode_disconnected){
-            System.out.println(">> enter the announce's reference : ");
+            System.out.print(">> enter the announce's reference : ");
             message_to_send = "DELETE;";
             message_to_send += sc.nextLine();
             send(message_to_send);

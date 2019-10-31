@@ -1,8 +1,3 @@
-package src;
-
-import java.net.*;
-import java.io.*;
-
 public class User{
 
 	private String pseudo;
