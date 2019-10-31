@@ -1,3 +1,5 @@
+package src;
+
 import java.net.*;
 import java.io.*;
 import java.util.*;
@@ -68,7 +70,6 @@ class Client {
                     break;
                 default:
                     System.out.println("Wrong command !");
-                    break;
             }
         }
     }
@@ -78,7 +79,6 @@ class Client {
             send(command);
             read();
             if(message_received.equals("OK")) {
-                close();
                 mode_disconnected = true;
                 System.out.println("################");
                 System.out.println("# Disconnected #");
@@ -86,7 +86,6 @@ class Client {
                 System.out.println("Now, you can only request public annouces but can't interact with anything else !");  
             } else {
                 System.out.println("ERROR, Bad server response, couldn't disconnect");
-                close();
                 System.exit(1);
             }
         }else{
@@ -100,9 +99,11 @@ class Client {
         read();
         if(message_received.equals("OK")){
             System.out.println("Server connexion destroyed.... see you soon... BYE !");
+            close();
             System.exit(1);
         }else{
             System.out.println("BAD SERVER RESPONSE, destroying everything... BYE");
+            close();
             System.exit(1);
         }
     }
@@ -148,11 +149,11 @@ class Client {
         read();
         String[] res = message_received.split(";");
         if(res[0].equals("FAIL")){
-            System.out.println("Error receiving " + command + " - cause : "+res[1]);
+            System.out.println("Error receiving " + command );
         }else if(res[0].equals(command)){
-            if(res.length == 1){
+            if(res.length == 1 ){
                 System.out.println("Nothing published yet, use ADD to be the first to publish an annouce");
-            }else{
+            }else if(res.length > 1){
                 System.out.println("All announces online :");
                 String[] tmp = res[1].split("###");
                 for(int i = 0; i < tmp.length; i++){

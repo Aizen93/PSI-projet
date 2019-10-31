@@ -61,8 +61,8 @@ public class ServerThread implements Runnable{
 	private boolean connect(String pseudo, String mdp) {
 		System.out.println("pseudo : "+pseudo+", mdp : "+mdp);
 		for(User u : serv.getUsers()) {
-			if(u.getPseudo() == pseudo) {
-				if (u.getMdp() == mdp) {
+			if( pseudo.equals(u.getPseudo()) ) {
+				if (mdp.equals(u.getMdp())) {
 					user = u;
 					user.setConnect(true);
 					return true;
@@ -98,14 +98,19 @@ public class ServerThread implements Runnable{
 			switch(tab[0]) {
 				case "CONNECT":
 					if(tab.length == 3) {
-						if(connect(tab[1], tab[2])) send = "OK";
+						System.out.println("run - login : "+tab[1]+", mdp : "+tab[2]);
+						if(connect(tab[1], tab[2])) {
+							send = "OK";
+						}
 						else send = "FAIL";
 					}
 					else	send = "FAIL";
+					send();
 					break;
 				case "ADD" :
 					if (add_annonce(tab)) send = "OK";
 					else send = "FAIL";
+					send();
 					break;
 				case "ANNS" :
 					send = "ANNS;";
@@ -113,12 +118,14 @@ public class ServerThread implements Runnable{
 						send += a.getType()+"***"+a.getDescription()+"***"+a.getRef()+"***"+a.getPrix()+"***"+a.getLogin()+"###";
 					}
 					System.out.println("ANNS : "+send);
+					send();
 					break;
 				case "ANN" :
 					send = "ANN;";
 					for(Annonce a : serv.getAnnonces()) {
 						if(tab[1].equals(a.getType())) send += a.getType()+"***"+a.getDescription()+"***"+a.getRef()+"***"+a.getPrix()+"***"+a.getLogin()+"###";
 					}
+					send();
 					break;
 				case "DELETE" :
 					if(user == null) send = "FAIL";
@@ -131,15 +138,17 @@ public class ServerThread implements Runnable{
 						}
 						send = "OK";
 					}
+					send();
 					break;
 				case "MYANNS" :
 					if(user == null) send = "FAIL";
 					else {
-						send = "MYANNS";
+						send = "MYANNS;";
 						for(Annonce a : serv.getAnnonces()) {
-							if(a.getLogin() == user.getPseudo()) send +="###"+a.getType()+"***"+a.getDescription()+"***"+a.getRef()+"***"+a.getPrix()+"***"+a.getLogin();
+							if(a.getLogin() == user.getPseudo()) send +=a.getType()+"***"+a.getDescription()+"***"+a.getRef()+"***"+a.getPrix()+"***"+a.getLogin()+"###";
 						}
 					}
+					send();
 					break;
 				case "DISCONNECT" :
 					if(user != null) {
@@ -150,14 +159,17 @@ public class ServerThread implements Runnable{
 					else {
 						send = "FAIL";
 					}
+					send();
+					break;
+				case "QUIT" :
+					send = "OK";
+					send();
 					break;
 				default : 
 					send = "FAIL";
+					send();
 			}
-			send();
 		}while(!mess.equals("QUIT"));
-		pw.println("Au revoir !");
-		pw.flush();
 		pw.close();
 		try {
 			br.close();
