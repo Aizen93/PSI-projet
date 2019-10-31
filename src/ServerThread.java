@@ -4,6 +4,8 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class ServerThread implements Runnable{
@@ -103,27 +105,27 @@ public class ServerThread implements Runnable{
 					else	send = "FAIL";
 					send();
 					break;
-				case "ADD" :
+				case "ADDANNS" :
 					if (add_annonce(tab)) send = "OK";
 					else send = "FAIL";
 					send();
 					break;
-				case "ANNS" :
-					send = "ANNS;";
+				case "ALLANNS" :
+					send = "ALLANNS;";
 					for(Annonce a : serv.getAnnonces()) {
 						send += a.getType()+"***"+a.getDescription()+"***"+a.getRef()+"***"+a.getPrix()+"***"+a.getLogin()+"###";
 					}
-					System.out.println("ANNS : "+send);
+					System.out.println("ALLANNS : "+send);
 					send();
 					break;
-				case "ANN" :
-					send = "ANN;";
+				case "ANNONCE" :
+					send = "ANNONCE;";
 					for(Annonce a : serv.getAnnonces()) {
 						if(tab[1].equals(a.getType())) send += a.getType()+"***"+a.getDescription()+"***"+a.getRef()+"***"+a.getPrix()+"***"+a.getLogin()+"###";
 					}
 					send();
 					break;
-				case "DELETE" :
+				case "DELANNS" :
 					if(user == null) send = "FAIL";
 					else {
 						for(Annonce a : serv.getAnnonces()) {
@@ -138,17 +140,17 @@ public class ServerThread implements Runnable{
 					}
 					send();
 					break;
-				case "MYANNS" :
+				case "MYYANNS" :
 					if(user == null) send = "FAIL";
 					else {
-						send = "MYANNS;";
+						send = "MYYANNS;";
 						for(Annonce a : serv.getAnnonces()) {
 							if(a.getLogin() == user.getPseudo()) send +=a.getType()+"***"+a.getDescription()+"***"+a.getRef()+"***"+a.getPrix()+"***"+a.getLogin()+"###";
 						}
 					}
 					send();
 					break;
-				case "DISCONNECT" :
+				case "DISCONN" :
 					if(user != null) {
 						user.setConnect(false);
 						user = null;

@@ -39,25 +39,25 @@ class Client {
             System.out.print("> Enter a command: ");
             command = sc.nextLine();
             switch (command) {
-                case "DISCONNECT":
+                case "DISCONN":
                     disconnect();
                     break;
                 case "CONNECT":
                     connecte();
                     break;
-                case "ANNS":
-                    getAllAnnounces("ANNS");
+                case "ALLANNS":
+                    getAllAnnounces("ALLANNS");
                     break;
-                case "MYANNS":
-                    getAllAnnounces("MYANNS");
+                case "MYYANNS":
+                    getAllAnnounces("MYYANNS");
                     break;
-                case "ANN":
-                    getAllAnnounces("ANN");
+                case "ANNONCE":
+                    getAllAnnounces("ANNONCE");
                     break;
-                case "DELETE":
+                case "DELANNS":
                     deleteAnnounce();
                     break;
-                case "ADD":
+                case "ADDANNS":
                     addAnnounce();
                     break;
                 case "SEND":
@@ -138,7 +138,7 @@ class Client {
     
     private void getAllAnnounces(String command){
         message_to_send = command;
-        if(command.equals("ANN")){
+        if(command.equals("ANNONCE")){
             System.out.println("Please fill the form bellow : ");
             System.out.print(">> Filter (Key word) : ");
             message_to_send += ";"+sc.nextLine();
@@ -150,7 +150,7 @@ class Client {
             System.out.println("Error receiving " + command );
         }else if(res[0].equals(command)){
             if(res.length == 1 ){
-                System.out.println("Nothing published yet, use ADD to be the first to publish an annouce");
+                System.out.println("Nothing published yet, use ADDANNS to be the first to publish an annouce");
             }else if(res.length > 1){
                 System.out.println("All announces online :");
                 String[] tmp = res[1].split("###");
@@ -188,7 +188,7 @@ class Client {
             System.out.print(">> description : ");
             String description = sc.nextLine();
             
-            message_to_send = "ADD;" + domain + ";" + price + ";" + description;
+            message_to_send = "ADDANNS;" + domain + ";" + price + ";" + description;
             send(message_to_send);
             read();
             if(message_received.equals("OK")){
@@ -206,7 +206,7 @@ class Client {
     private void deleteAnnounce(){
         if(!mode_disconnected){
             System.out.print(">> enter the announce's reference : ");
-            message_to_send = "DELETE;";
+            message_to_send = "DELANNS;";
             message_to_send += sc.nextLine();
             send(message_to_send);
             read();
