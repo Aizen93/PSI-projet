@@ -2,6 +2,8 @@ import java.io.*;
 import java.net.*;
 import java.util.Scanner;
 
+import sun.font.CreatedFontTracker;
+
 import java.net.*;
 import java.io.*;
 import java.util.Scanner;
@@ -35,9 +37,9 @@ public class ClientTCP {
 		boolean connected = true;
 		String commande;
 		while(connected) {
-			System.out.println("Entrez votre choix : 1 - Connect, 2 - Disconnect, 3 - Add annonce, 4 - Voir toutes les annonces,"
-					+ " 5 - Voir mes annonces,\n 6 - Voir les annonces avec filtre, 7 - Supprimer une annonce,"
-					+ " 8 - Envoyer un message à un utilisateur");
+			System.out.println("Entrez votre choix : 0 - Quitter l'application, 1 - Connect, 2 - Disconnect, 3 - Add annonce,"
+					+ " 4 - Voir toutes les annonces, 5 - Voir mes annonces,\n 6 - Voir les annonces avec filtre,"
+					+ " 7 - Supprimer une annonce, 8 - Envoyer un message à un utilisateur");
 			commande = clientTCP.inFromUser.nextLine();
 			switch(commande) {
 			case "0":
@@ -67,6 +69,7 @@ public class ClientTCP {
 			case "8":
 				int portUDP = clientTCP.sendMessage();
 				//TODO: create connection à l'aide du portUDP
+				clientTCP.createUDP(portUDP);
 				break;
 			default:
 				connected = false; 
@@ -287,6 +290,9 @@ public class ClientTCP {
 
 	}
 
+	public void createUDP(int portUDP) {
+		
+	}
 
 	//------------------------------------------------------------------------------------------------------------
 
