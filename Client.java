@@ -13,6 +13,10 @@ class Client {
     private boolean mode_disconnected;
     private String command = "";
     private String message_to_send;
+    private ClientUDP client_udp;
+    private	InetSocketAddress address;
+    private String username, password;
+
 
     public Client() {
         this.exit = false;
@@ -33,7 +37,7 @@ class Client {
     }
     
 
-    public void communication() {
+    public void communication() throws NumberFormatException, SocketException {
         //read();
         while(!exit) {
             System.out.print("> Enter a command: ");
@@ -60,16 +64,45 @@ class Client {
                 case "ADDANNS":
                     addAnnounce();
                     break;
-                case "SEND":
-                    //TO DO FOR NEXT VERSION
+                case "READALL":
+                    //System.out.println("You have "+ client_udp.sizeMessage());
+                	client_udp.read();
                     break;
                 case "QUIT":
                     quitApply();
                     break;
+                case "MESSAGE":
+                	message();
+                	break;
                 default:
                     System.out.println("Wrong command !");
             }
+            if(!mode_disconnected) System.out.println("You have "+ client_udp.sizeMessage()+" new unseen message(s)");
         }
+    }
+    
+    private void message() {
+        System.out.print(">> Ref announce : ");
+        int announce_ref = Integer.parseInt(sc.nextLine());
+    	send("MESSAGE;"+announce_ref);
+    	read();
+    	String []tab = message_received.split(";");
+    	//if les bon result
+    	if(tab.length == 1 && tab[0].equals("MESSAGE")) {
+    		System.out.println("Sorry no annouce found with ref = "+ announce_ref);
+    	}else {
+	    	if(tab[0].equals("MESSAGE")) {
+	    		System.out.println("++++"+message_received);
+	    		address = new InetSocketAddress("localhost", Integer.parseInt(tab[1]));
+	        	System.out.print("Message : ");
+	        	message_to_send = "WRITETO;"+ username + ";" + sc.nextLine();
+	        	
+	        	client_udp.sendTo(address, message_to_send);
+	    	}else {
+	    		System.out.println("Error Server bad response !");
+	    	}
+    	}
+    	
     }
     
     private void disconnect(){
@@ -106,9 +139,8 @@ class Client {
         }
     }
     
-    private void connecte(){
-        String username;
-        String password;
+    private void connecte() throws NumberFormatException, SocketException{
+        //int port_udp;
         if(mode_disconnected){
             System.out.println("Please fill the form bellow :");
             System.out.print(">> Login: ");
@@ -121,8 +153,12 @@ class Client {
             message_to_send = "CONNECT;" + username + ";" + password;
             send(message_to_send);
             read();
-            if(message_received.equals("OK")){
+            String[]tab = message_received.split(";");
+            if(tab[0].equals("CONNECT")){
                 mode_disconnected = false;
+                client_udp = new ClientUDP();
+                client_udp.bind(Integer.parseInt(tab[1]));
+                client_udp.start();
                 System.out.println("############################");
                 System.out.println("# Connection successfull ! #");
                 System.out.println("############################");
@@ -274,7 +310,7 @@ class Client {
         pw.flush();
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws NumberFormatException, SocketException {
         Client client = new Client();
         client.communication();
     }

@@ -12,6 +12,7 @@ public class Server {
 	private ServerSocket serv;
 	private static int nb_connecte = 0;
 	private static int refs = 0;
+	private static int port_udp = 2000;
 	private ArrayList<User> users;
 	private ArrayList<Annonce> annonces;
 
@@ -53,7 +54,7 @@ public class Server {
 	public static void main(String[] args) {
 		try{
 			ServerSocket s = new ServerSocket (1027);
-			Server serv = new Server(s);
+			new Server(s);
 		}
 		catch (Exception e) {
 			System.out.println("Error - Connection to server failed");
@@ -97,6 +98,7 @@ public class Server {
 			this.so = s;
 			buffered();
 			this.user = null;
+			System.out.println("--------------Server is now Running-----------------------");
 		}
 		
 		
@@ -128,27 +130,31 @@ public class Server {
 	        pw.flush();
 		}
 		
+		private synchronized int add_user(String pseudo, String mdp) {
+			System.out.println("            ----> New User created");
+			user = new User(pseudo, mdp, port_udp);
+			port_udp ++;
+			addUser(user);;
+			return user.getPortUDP();
+		}
 		
-		
-		private boolean connect(String pseudo, String mdp) {
+		private synchronized int connect(String pseudo, String mdp) {
 			System.out.println("pseudo : "+pseudo+", mdp : "+mdp);
 			for(User u : getUsers()) {
 				if( pseudo.equals(u.getPseudo()) ) {
 					if (mdp.equals(u.getMdp())) {
 						user = u;
 						user.setConnect(true);
-						return true;
+						return u.getPortUDP();
 					}else {
-						return false;
+						return 0;
 					}
 				}
 			}
-			user = new User(pseudo, mdp);
-			addUser(user);;
-			return true;
+			return add_user(pseudo, mdp);
 		}
 		
-		private boolean add_annonce(String []tab) {
+		private synchronized boolean add_annonce(String []tab) {
 			if(user == null)  return false;
 			else {
 				if(tab.length == 4) {
@@ -160,7 +166,37 @@ public class Server {
 			}
 		}
 
+		private void connect(String[] tab) {
+			if(tab.length == 3) {
+				System.out.println("run - login : "+tab[1]+", mdp : "+tab[2]);
+				int port = connect(tab[1], tab[2]);
+				if(port>0) {
+					send = "CONNECT;" + port;
+				}
+				else send = "FAIL;Wrong password"; 
+			}
+			else	send = "FAIL;Too many parameters"; 
+			System.out.println("send : "+send);
+			send();
+		}
 		
+		private void disconnect() {
+			if(user != null) {
+				user.setConnect(false);
+				user = null;
+				send="OK";
+			}
+			else 	send = "FAIL;You are already not connected";
+			send();
+		}
+		
+		private void my_annonces() {
+			send = "MYYANNS;";
+			for(Annonce a : getAnnonces()) {
+				if(a.getLogin() == user.getPseudo()) send +=a.getType()+"***"+a.getDescription()+"***"+a.getRef()+"***"+a.getPrix()+"***"+a.getLogin()+"###";
+			}
+			send();
+		}
 		
 		public void run(){
 			do {
@@ -169,15 +205,7 @@ public class Server {
 				tab = mess.split(";");
 				switch(tab[0]) {
 					case "CONNECT":
-						if(tab.length == 3) {
-							System.out.println("run - login : "+tab[1]+", mdp : "+tab[2]);
-							if(connect(tab[1], tab[2])) {
-								send = "OK";
-							}
-							else send = "FAIL";
-						}
-						else	send = "FAIL";
-						send();
+						connect(tab);
 						break;
 					case "ADDANNS" :
 						if (add_annonce(tab)) send = "OK";
@@ -200,7 +228,7 @@ public class Server {
 						send();
 						break;
 					case "DELANNS" :
-						if(user == null) send = "FAIL";
+						if(user == null) send = "FAIL;You are not connected";
 						else {
 							for(Annonce a : getAnnonces()) {
 								if(Integer.parseInt(tab[1]) == a.getRef() && (a.getLogin()).equals(user.getPseudo())) {
@@ -215,32 +243,40 @@ public class Server {
 						send();
 						break;
 					case "MYYANNS" :
-						if(user == null) send = "FAIL";
-						else {
-							send = "MYYANNS;";
-							for(Annonce a : getAnnonces()) {
-								if(a.getLogin() == user.getPseudo()) send +=a.getType()+"***"+a.getDescription()+"***"+a.getRef()+"***"+a.getPrix()+"***"+a.getLogin()+"###";
-							}
-						}
-						send();
+						if(user == null) send = "FAIL;You are not connected";
+						else my_annonces();
 						break;
 					case "DISCONN" :
-						if(user != null) {
-							user.setConnect(false);
-							user = null;
-							send="OK";
-						}
-						else {
-							send = "FAIL";
-						}
-						send();
+						disconnect();
 						break;
 					case "QUIT" :
 						send = "OK";
 						send();
 						break;
+					case "MESSAGE" :
+						if(user == null) send = "FAIL;Error - you are not connected";
+						else {
+							int ref =  Integer.parseInt(tab[1]);
+							System.out.println("DEBUG --- ref = "+ref);
+							for(Annonce a : annonces) {
+								if(a.getRef() == ref) {
+									System.out.println("DEBUG --- annonce existante");
+									for(User u : users) {
+										if(u.getPseudo().equals(a.getLogin())) {
+											send = "MESSAGE;"+u.getPortUDP();
+											System.out.println(send);
+											send();
+											break;
+										}
+									}
+								}
+							}
+							send = "FAIL;Error - this annonce does not exist";
+						}
+						send();
+						break;
 					default : 
-						send = "FAIL";
+						send = "FAIL;This command does not exist";
 						send();
 				}
 			}while(!mess.equals("QUIT"));
@@ -259,6 +295,5 @@ public class Server {
 			}
 		}
 	}
-
 
 }
