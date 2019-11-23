@@ -9,8 +9,8 @@ public class Fonctions implements Runnable{
     private BufferedReader in ;
     private String protocole;
     private static int ref = 0;      
-    private static ArrayList<Users> listUsersConncted = new ArrayList<>() ;
-    private static ArrayList<Annonce> annoncesAll = new ArrayList<>();
+    private static ArrayList<Users> listUsersConncted = new ArrayList<Users>() ;
+    private static ArrayList<Annonce> annoncesAll = new ArrayList<Annonce>();
     private static String login = "";
     private static int portUDP = 8531;
 
@@ -56,37 +56,13 @@ public class Fonctions implements Runnable{
                         break;
 
                     case "DISCONN":
-                        if(u != null) {
-                            u.setConnecte(false);
-                            u = null;
-                            out.println("OK");
-                            out.flush();
-                        }else {
-                            out.println("FAIL;vous êtes déjà déconnectés");
-                            out.flush();
-                        }
+                        u = disconnection(u);
                         break;
-
                     case "ADDANNS":
-                        if(u != null){
-                            boolean b = addAnnonce(u,token);
-                            if(b){
-                                out.println("OK");
-                                out.flush();
-                            }
-                        }else{
-                            out.println("FAIL;vous n'êtes pas connectés");
-                            out.flush();
-                        }
+                        addAnnonce(u,token);
                         break;
                     case "MYYANNS":
-                        if(u != null){
-                            afficherMesAnnoneces(u);
-                        }else{
-                            out.println("FAIL;vous n'êtes pas connectés");
-                            out.flush();
-                        }
-                        
+                        afficherMesAnnoneces(u);
                         break;
                     case "ANNONCE":
                         afficherAnnonceParType(token[1]);
@@ -95,9 +71,7 @@ public class Fonctions implements Runnable{
                         deleteAnnonceParRef(u,token[1]);
                         break;
                     case "MESSAGE":
-                        out.println("MESSAGE;"+portUDP);
-                        out.flush();
-                        portUDP++;
+                        envoiLePort();
                         break;
                     case "QUIT":
                         try{
@@ -108,12 +82,11 @@ public class Fonctions implements Runnable{
                         }catch(IOException e){
                             out.println("FAIL;vous n'êtes pas déconnectés");
                             out.flush();
-                            System.out.println("Pobleme dans le socket");
                             System.exit(1);
                         }
                         break;
                     default:
-                        out.println("FIAL;vous n'avez pas bien saisié votre protocole");
+                        out.println("FAIL;vous n'avez pas bien saisié votre protocole");
                         out.flush();
                 }
             }
@@ -132,7 +105,6 @@ public class Fonctions implements Runnable{
                 if (mdp.equals(u.getMdp())) {
                     user = u;
                     user.setConnecte(true);
-
                     return user;
                 }else{
                     return user;
@@ -143,19 +115,17 @@ public class Fonctions implements Runnable{
         listUsersConncted.add(user);
         return user;
     }
-  
-    private synchronized boolean addAnnonce(Users user,String[]token){
+    private synchronized void addAnnonce(Users user,String[]token){
         if(user == null) {
-            return false;
+            out.println("FAIL;vous n'êtes pas connectés");
+            out.flush();
         } else if(user!= null && token[2].trim().matches("\\d+")){
             ref++;
             Annonce a = new Annonce(ref,user.getPseudo().trim(),token[1].trim(), Integer.parseInt(token[2].trim()),token[3].trim());
             annoncesAll.add(a);
-            return true;
-        }else{
-            return false;
+            out.println("OK");
+            out.flush();
         }
-        
     }
     private synchronized void deleteAnnonceParRef(Users u,String ref){
         if(u == null){
@@ -178,10 +148,8 @@ public class Fonctions implements Runnable{
                 	break;
                 }
             }
-
         }        
     }
-
     private synchronized void afficherAllAnnonces(){
         String message ="ALLANNS;";
         for(int i = 0;i < annoncesAll.size();i++){
@@ -192,15 +160,20 @@ public class Fonctions implements Runnable{
         out.flush();
     }
     private synchronized void afficherMesAnnoneces(Users usr){
-        String message ="MYYANNS;";
-        for(int i = 0;i < annoncesAll.size();i++){
-            if(annoncesAll.get(i).getLogin().equals(usr.getPseudo())){
-                message += annoncesAll.get(i).getDomaine()+"***"+ annoncesAll.get(i).getContenu()+
-                "***"+annoncesAll.get(i).getRef()+"***"+annoncesAll.get(i).getPrix() + "***"+annoncesAll.get(i).getLogin()+"###";    
-            }
-        }    
-        out.println(message);
-        out.flush();
+        if(usr != null){
+            String message ="MYYANNS;";
+            for(int i = 0;i < annoncesAll.size();i++){
+                if(annoncesAll.get(i).getLogin().equals(usr.getPseudo())){
+                    message += annoncesAll.get(i).getDomaine()+"***"+ annoncesAll.get(i).getContenu()+
+                    "***"+annoncesAll.get(i).getRef()+"***"+annoncesAll.get(i).getPrix() + "***"+annoncesAll.get(i).getLogin()+"###";    
+                }
+            }    
+            out.println(message);
+            out.flush();
+        }else{
+            out.println("FAIL;vous n'êtes pas connectés");
+            out.flush();
+        }
     }   
     private synchronized void afficherAnnonceParType(String type){
         String message = "ANNONCE;";
@@ -214,6 +187,24 @@ public class Fonctions implements Runnable{
         out.flush();
 
     }
+    private synchronized void envoiLePort(){
+        out.println("MESSAGE;"+portUDP);
+        out.flush();
+        portUDP++;
+    }
+    private synchronized Users disconnection(Users usr){
+        if(usr != null) {
+            usr.setConnecte(false);
+            usr = null;
+            out.println("OK");
+            out.flush();
+        }else {
+            out.println("FAIL;vous êtes déjà déconnectés");
+            out.flush();
+        }
+        return usr;
+    }
+   
     private Users isExiste(String p){
       
         for(int i = 0; i < listUsersConncted.size(); i++){
