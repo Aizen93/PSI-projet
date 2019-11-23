@@ -30,6 +30,7 @@ public class ClientTCP {
 	}
 
 	public static void main(String[] args) throws Exception {
+		//TODO: Fermer le programme (return dans main) si le serveur est eteint
 		ClientTCP clientTCP = new ClientTCP();
 		clientTCP.inFromUser = new Scanner(System.in);
 		boolean connected = true;

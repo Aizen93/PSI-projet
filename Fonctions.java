@@ -10,7 +10,7 @@ public class Fonctions implements Runnable{
     private String protocole;
    // private String [] token;
    // private boolean conncted = true;
-    private  static int ref = 0;      
+    private static int ref = 0;      
     private static ArrayList<Users> listUsersConncted = new ArrayList<>() ;
     private static ArrayList<Annonce> annoncesAll = new ArrayList<>();
     static String login = "";
@@ -159,15 +159,22 @@ public class Fonctions implements Runnable{
             out.flush();
         }else {
             for (int i = 0; i < annoncesAll.size() ; i++) {
-               /* if(annoncesAll.get(i).getLogin().equals(u.getPseudo()) && annoncesAll.get(i).getID() == Integer.parseInt(token[1])){
-                    annoncesAll.remove(i);
-                    out.println("OK");
-                    out.flush();
-                }*/
+                if(annoncesAll.get(i).getRef() == Integer.parseInt(ref)){
+                	if(annoncesAll.get(i).getLogin().equals(u.getPseudo())) {
+                		annoncesAll.remove(i);
+                		out.println("OK");
+                		out.flush();                		
+                	} else {
+                		out.println("FAIL");
+                		out.flush();
+                	}
+                	break;
+                }
             }
 
         }        
     }
+
     private synchronized void afficherAllAnnonces(){
         String message ="ALLANNS;";
         for(int i = 0;i < annoncesAll.size();i++){
