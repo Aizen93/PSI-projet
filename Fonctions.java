@@ -8,12 +8,12 @@ public class Fonctions implements Runnable{
     private PrintWriter out ;
     private BufferedReader in ;
     private String protocole;
-   // private String [] token;
-   // private boolean conncted = true;
     private static int ref = 0;      
     private static ArrayList<Users> listUsersConncted = new ArrayList<>() ;
     private static ArrayList<Annonce> annoncesAll = new ArrayList<>();
-    static String login = "";
+    private static String login = "";
+    private static int portUDP = 8531;
+
     
     public Fonctions(Socket _socket) {
         this.socket = _socket;
@@ -22,7 +22,6 @@ public class Fonctions implements Runnable{
     @Override
     public void run() {
         try {
-
             out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));             
             String str = "";
@@ -43,7 +42,7 @@ public class Fonctions implements Runnable{
                             out.println("OK");
                             out.flush();
                         }else{
-                            out.println("FAIL");
+                            out.println("FAIL;mot de pass n'est pas correct");
                             out.flush();
                         }
                         break;
@@ -51,34 +50,32 @@ public class Fonctions implements Runnable{
                         if(annoncesAll.size()>0){
                             afficherAllAnnonces();
                         }else{
-                            out.println("FAIL");
+                            out.println("ALLANNS;");
                             out.flush();
                         } 
                         break;
-                    case "DISCONN":
 
+                    case "DISCONN":
                         if(u != null) {
                             u.setConnecte(false);
                             u = null;
                             out.println("OK");
                             out.flush();
                         }else {
-                            out.println("FAIL");
+                            out.println("FAIL;vous êtes déjà déconnectés");
                             out.flush();
                         }
                         break;
+
                     case "ADDANNS":
                         if(u != null){
                             boolean b = addAnnonce(u,token);
                             if(b){
                                 out.println("OK");
                                 out.flush();
-                            }else{
-                                out.println("FAIL");
-                                out.flush();
                             }
                         }else{
-                            out.println("FAIL");
+                            out.println("FAIL;vous n'êtes pas connectés");
                             out.flush();
                         }
                         break;
@@ -86,7 +83,7 @@ public class Fonctions implements Runnable{
                         if(u != null){
                             afficherMesAnnoneces(u);
                         }else{
-                            out.println("FAIL");
+                            out.println("FAIL;vous n'êtes pas connectés");
                             out.flush();
                         }
                         
@@ -97,6 +94,11 @@ public class Fonctions implements Runnable{
                     case "DELANNS":
                         deleteAnnonceParRef(u,token[1]);
                         break;
+                    case "MESSAGE":
+                        out.println("MESSAGE;"+portUDP);
+                        out.flush();
+                        portUDP++;
+                        break;
                     case "QUIT":
                         try{
                             out.close();
@@ -104,12 +106,14 @@ public class Fonctions implements Runnable{
                             socket.close();
                             return;
                         }catch(IOException e){
+                            out.println("FAIL;vous n'êtes pas déconnectés");
+                            out.flush();
                             System.out.println("Pobleme dans le socket");
                             System.exit(1);
                         }
                         break;
                     default:
-                        out.println("Erreur, vous n'avez pas bien saisié votre protocole");
+                        out.println("FIAL;vous n'avez pas bien saisié votre protocole");
                         out.flush();
                 }
             }
@@ -155,7 +159,7 @@ public class Fonctions implements Runnable{
     }
     private synchronized void deleteAnnonceParRef(Users u,String ref){
         if(u == null){
-            out.println("FAIL");
+            out.println("FAIL;vous êtes déconnectés");
             out.flush();
         }else {
             for (int i = 0; i < annoncesAll.size() ; i++) {
@@ -164,10 +168,13 @@ public class Fonctions implements Runnable{
                 		annoncesAll.remove(i);
                 		out.println("OK");
                 		out.flush();                		
-                	} else {
-                		out.println("FAIL");
+                	} else if(annoncesAll.contains(Integer.parseInt(ref))) {
+                		out.println("FAIL;l'annonce a été supprimé");
                 		out.flush();
-                	}
+                	}else{
+                        out.println("FAIL;vous n'êtes pas le propriétaire de l'annonce");
+                		out.flush();
+                    }
                 	break;
                 }
             }
@@ -218,57 +225,4 @@ public class Fonctions implements Runnable{
         }
        return null;
     }
-    /*public synchronized Users connect(Socket socket, String[]msg){
-        Users usr = null;
-        try{
-            String pseudo = msg[1];
-            String mdp = msg[2];
-            if(pseudo != "" && mdp != ""){
-                if(isExiste(pseudo) == null){
-                    usr = new Users(pseudo,mdp);
-                    listUsersConncted.add(usr);             
-                }else if(isExiste(pseudo).getMdp().equals(mdp)){
-                     usr = new Users(pseudo,mdp);
-                    // if(isExiste(pseudo).SetConnect(true)){
-                     listUsersConncted.add(usr);  
-                }
-            }
-            System.out.println("SIZE DE LISTE: "+ listUsersConncted.size());
-            System.out.println("Fin inscription");
-    
-        } catch(Exception e){ 
-            e.printStackTrace(); 
-            System.exit(1); 
-        }  
-        return usr;
-    }*/
-  
-
-    /*public synchronized Users connect(String[]msg){
-        Users usr = null;
-        try{
-            String pseudo = msg[1];
-            String mdp = msg[2];
-            usr = isExiste(pseudo);
-            if(pseudo != "" && mdp != ""){
-                if(usr == null){
-                    usr = new Users(pseudo,mdp);
-                    usr.setConnecte(true);
-                    listUsersConncted.add(usr);             
-                }else if(usr.getPseudo().equals(pseudo) && usr.getMdp().equals(mdp)){
-                    usr.setConnecte(true);  
-                }
-            }
-            System.out.println("SIZE DE LISTE: "+ listUsersConncted.size());
-            System.out.println("Fin inscription");
-    
-        } catch(Exception e){ 
-            e.printStackTrace(); 
-            System.exit(1); 
-        }  
-        return usr;
-
-    }*/
-
-
 }
