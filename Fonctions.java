@@ -9,9 +9,8 @@ public class Fonctions implements Runnable{
     private BufferedReader in ;
     private String protocole;
     private static int ref = 0;      
-    private static ArrayList<Users> listUsersConncted = new ArrayList<Users>() ;
+    private static ArrayList<Users> listUsersConnected = new ArrayList<Users>() ;
     private static ArrayList<Annonce> annoncesAll = new ArrayList<Annonce>();
-    private static String login = "";
     private static int portUDP = 8531;
 
     
@@ -21,11 +20,11 @@ public class Fonctions implements Runnable{
 
     @Override
     public void run() {
+    	Users u = null;
         try {
             out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));             
             String str = "";
-            Users u = null;
             String [] token = null;
             while ((str = in.readLine()) != null) {
                 System.out.println("Message: "+ str);
@@ -38,13 +37,6 @@ public class Fonctions implements Runnable{
                 switch (protocole) {
                     case "CONNECT":
                         u = connect(token);
-                        if(u != null){
-                            out.println("OK");
-                            out.flush();
-                        }else{
-                            out.println("FAIL;mot de pass n'est pas correct");
-                            out.flush();
-                        }
                         break;
                     case "ALLANNS":
                         afficherAllAnnonces();
@@ -68,46 +60,61 @@ public class Fonctions implements Runnable{
                         envoiLePort(token[1]);
                         break;
                     case "QUIT":
-                        try{
-                            out.close();
-                            in.close();
-                            socket.close();
-                            return;
-                        }catch(IOException e){
-                            out.println("FAIL;vous n'êtes pas déconnectés");
-                            out.flush();
-                            System.exit(1);
-                        }
+                    	quit();
                         break;
                     default:
-                        out.println("FAIL;");
+                        out.println("FAIL;Veuillez respecter le protocole");
                         out.flush();
                 }
             }
 
         } catch (IOException e) {
-            e.printStackTrace(); 
-            System.exit(1);
+        	String nameClient;
+        	if(u==null)	nameClient = "invite";
+        	else	nameClient = u.getPseudo();
+        	System.out.println("Le Client " + nameClient +  " s'est déconnecté de manière brutale");
+//            System.exit(1);
+            quit();
         }
     }
-    private Users connect(String msg[]) {
+    
+    private void quit() {
+        try{
+            out.close();
+            in.close();
+            socket.close();
+            return;
+        }catch(IOException e){
+            out.println("FAIL;vous n'êtes pas déconnectés");
+            out.flush();
+            System.exit(1);
+        }
+	}
+
+	private Users connect(String msg[]) {
         String pseudo = msg[1];
         String mdp = msg[2];
         Users user = null;
-        for(Users u : listUsersConncted) {
+        for(Users u : listUsersConnected) {
             if( pseudo.equals(u.getPseudo())) {
                 if (mdp.equals(u.getMdp())) {
                     user = u;
-                    user.setConnecte(true);
-                    return user;
+                    user.setConnect(true);
+                    break;
                 }else{
-                    return user;
+                	out.println("FAIL;mot de passe incorrect");
+                	out.flush();
+                    return null;
                 }
             }
         }
-        user = new Users(pseudo, mdp,portUDP);
-        portUDP++;
-        listUsersConncted.add(user);
+        if(user == null){
+        	user = new Users(pseudo, mdp,portUDP);
+        	portUDP++;
+        	listUsersConnected.add(user);        	
+        }
+        out.println("CONNECT;"+user.getPortUDP());
+        out.flush();
         return user;
     }
     private synchronized void addAnnonce(Users user,String[]token){
@@ -132,25 +139,23 @@ public class Fonctions implements Runnable{
                 	if(annoncesAll.get(i).getLogin().equals(u.getPseudo())) {
                 		annoncesAll.remove(i);
                 		out.println("OK");
-                		out.flush();                		
-                	} else if(annoncesAll.contains(Integer.parseInt(ref))) {
+                		out.flush();
+                	}/* else if(annoncesAll.contains(Integer.parseInt(ref))) {
                 		out.println("FAIL;l'annonce a été supprimé.");
                         out.flush();
-                        break;
                     }else{
                         out.println("FAIL;vous n'êtes pas le propriétaire de l'annonce.");
                         out.flush();
-                        break;
-                    }
+                    }*/
                 	break;
-                }else if(!annoncesAll.contains(Integer.parseInt(ref)) && ref.trim().matches("\\d+") ){
+                }/*else if(!annoncesAll.contains(Integer.parseInt(ref)) && ref.trim().matches("\\d+") ){
                     out.println("FAIL;Il n'a pas d'annonce avec le numero de ref que vous aves donnés.");
                     out.flush();
                     break;
                 }else if(!ref.trim().matches("\\d+")){
                     out.println("FAIL;Vous n'avez pas tapés un nombre.");
                     out.flush();
-                }
+                }*/
             }
         } else if( u!=null && annoncesAll.size() == 0 && !ref.trim().matches("\\d+")){
             out.println("FAIL;Vous n'avez pas tapés un nombre et il n'a pas d'annonces.");
@@ -213,29 +218,35 @@ public class Fonctions implements Runnable{
     }
     private synchronized void envoiLePort(String id_annonce){
         String envoi = "MESSAGE;";
+        int portUDP = 0;
         for(int i = 0; i < annoncesAll.size(); i++){
             if(annoncesAll.get(i).getRef( ) == Integer.parseInt(id_annonce)){
                 String login = annoncesAll.get(i).getLogin();
-                for(int j = 0; j < listUsersConncted.size(); j++){
-                    if(listUsersConncted.get(j).getPseudo().equals(login)){
-                       envoi+=listUsersConncted.get(j).getPortUDP();
+                for(int j = 0; j < listUsersConnected.size(); j++){
+                    if(listUsersConnected.get(j).getPseudo().equals(login)){
+                       portUDP=listUsersConnected.get(j).getPortUDP();
+                       break;
                     }
                 }
+                break;
             }
         }
-        out.println(envoi);
+        if(portUDP==0) {
+        	out.println("FAIL;L'annonce n'existe pas");
+        } else {
+        	out.println(envoi+portUDP);
+        }
         out.flush();
     }
-   private synchronized Users disconnection(Users usr){
+    private synchronized Users disconnection(Users usr){
         if(usr != null) {
-            usr.setConnecte(false);
+            usr.setConnect(false);
             usr = null;
             out.println("OK");
-            out.flush();
         }else {
             out.println("FAIL;vous êtes déjà déconnectés");
-            out.flush();
         }
+        out.flush();
         return usr;
     }
    

@@ -1,33 +1,28 @@
-import java.net.*;
-import java.io.*;
-import java.lang.*;
-import java.util.*;
-
 public class Users {
 
-    private String psdo,mdp;
+    private String pseudo,mdp;
     private int portUDP; 
-    private boolean connet;
+    private boolean connect;
 
 		
-    public Users(String _psdo, String _mdp,int _portUDP) {
-        this.psdo = _psdo;
+    public Users(String _pseudo, String _mdp,int _portUDP) {
+        this.pseudo = _pseudo;
         this.mdp = _mdp;
         this.portUDP = _portUDP;
-        this.connet = true;
+        this.connect = true;
     }
 
 	public String getMdp() { 
 		return this.mdp; 
     }
     public String getPseudo(){
-        return this.psdo;
+        return this.pseudo;
     }
     public boolean getConnect(){
-        return connet;
+        return connect;
     }
-    public void setConnecte(boolean v){
-        this.connet = v;
+    public void setConnect(boolean v){
+        this.connect = v;
     }
     public int getPortUDP(){
         return portUDP;
