@@ -195,7 +195,7 @@ public class Server {
 				user = null;
 				send="OK";
 			}
-			else 	send = "FAIL;You are already not connected";
+			else 	send = "FAIL;You are already not loged in";
 			send();
 		}
 		

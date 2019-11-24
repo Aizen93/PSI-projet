@@ -71,11 +71,11 @@ public class ClientUDP  implements Runnable {
             
             String answer;
             while(true){
-                System.out.println(">> Would you like to answer ? (y/n): ");
+                System.out.print(">> Would you like to answer ? (y/n): ");
                 answer = sc.nextLine();
                 if(answer.equals("y") || answer.equals("Y") || answer.equals("yes") || answer.equals("YES")){
                     InetSocketAddress address = new InetSocketAddress("localhost", mess.getPortUDP());
-                    System.out.print("Message : ");
+                    System.out.print(">> Message : ");
                     answer = "WRITETO;"+ pseudo + ";" + port + ";" + sc.nextLine();
 
                     sendTo(address, answer);
