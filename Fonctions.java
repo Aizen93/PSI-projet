@@ -47,14 +47,8 @@ public class Fonctions implements Runnable{
                         }
                         break;
                     case "ALLANNS":
-                        if(annoncesAll.size()>0){
-                            afficherAllAnnonces();
-                        }else{
-                            out.println("ALLANNS;");
-                            out.flush();
-                        } 
+                        afficherAllAnnonces();
                         break;
-
                     case "DISCONN":
                         u = disconnection(u);
                         break;
@@ -71,7 +65,7 @@ public class Fonctions implements Runnable{
                         deleteAnnonceParRef(u,token[1]);
                         break;
                     case "MESSAGE":
-                        envoiLePort();
+                        envoiLePort(token[1]);
                         break;
                     case "QUIT":
                         try{
@@ -86,7 +80,7 @@ public class Fonctions implements Runnable{
                         }
                         break;
                     default:
-                        out.println("FAIL;vous n'avez pas bien saisié votre protocole");
+                        out.println("FAIL;");
                         out.flush();
                 }
             }
@@ -111,7 +105,8 @@ public class Fonctions implements Runnable{
                 }
             }
         }
-        user = new Users(pseudo, mdp);
+        user = new Users(pseudo, mdp,portUDP);
+        portUDP++;
         listUsersConncted.add(user);
         return user;
     }
@@ -121,7 +116,7 @@ public class Fonctions implements Runnable{
             out.flush();
         } else if(user!= null && token[2].trim().matches("\\d+")){
             ref++;
-            Annonce a = new Annonce(ref,user.getPseudo().trim(),token[1].trim(), Integer.parseInt(token[2].trim()),token[3].trim());
+            Annonce a = new Annonce(ref,user.getPseudo().trim(),token[1].trim().toLowerCase(), Integer.parseInt(token[2].trim()),token[3].trim());
             annoncesAll.add(a);
             out.println("OK");
             out.flush();
@@ -129,9 +124,9 @@ public class Fonctions implements Runnable{
     }
     private synchronized void deleteAnnonceParRef(Users u,String ref){
         if(u == null){
-            out.println("FAIL;vous êtes déconnectés");
+            out.println("FAIL;vous êtes déconnectés.");
             out.flush();
-        }else {
+        }else if( u !=  null && (annoncesAll.size() > 0)){
             for (int i = 0; i < annoncesAll.size() ; i++) {
                 if(annoncesAll.get(i).getRef() == Integer.parseInt(ref)){
                 	if(annoncesAll.get(i).getLogin().equals(u.getPseudo())) {
@@ -139,25 +134,45 @@ public class Fonctions implements Runnable{
                 		out.println("OK");
                 		out.flush();                		
                 	} else if(annoncesAll.contains(Integer.parseInt(ref))) {
-                		out.println("FAIL;l'annonce a été supprimé");
-                		out.flush();
-                	}else{
-                        out.println("FAIL;vous n'êtes pas le propriétaire de l'annonce");
-                		out.flush();
+                		out.println("FAIL;l'annonce a été supprimé.");
+                        out.flush();
+                        break;
+                    }else{
+                        out.println("FAIL;vous n'êtes pas le propriétaire de l'annonce.");
+                        out.flush();
+                        break;
                     }
                 	break;
+                }else if(!annoncesAll.contains(Integer.parseInt(ref)) && ref.trim().matches("\\d+") ){
+                    out.println("FAIL;Il n'a pas d'annonce avec le numero de ref que vous aves donnés.");
+                    out.flush();
+                    break;
+                }else if(!ref.trim().matches("\\d+")){
+                    out.println("FAIL;Vous n'avez pas tapés un nombre.");
+                    out.flush();
                 }
             }
-        }        
+        } else if( u!=null && annoncesAll.size() == 0 && !ref.trim().matches("\\d+")){
+            out.println("FAIL;Vous n'avez pas tapés un nombre et il n'a pas d'annonces.");
+            out.flush();
+        } else if( u!=null && annoncesAll.size() == 0){
+            out.println("FAIL;Il n'y a pas d'annonces.");
+            out.flush(); 
+        }     
     }
     private synchronized void afficherAllAnnonces(){
-        String message ="ALLANNS;";
-        for(int i = 0;i < annoncesAll.size();i++){
-            message += annoncesAll.get(i).getDomaine()+"***"+ annoncesAll.get(i).getContenu()+
-            "***"+annoncesAll.get(i).getRef()+"***"+annoncesAll.get(i).getPrix() + "***"+annoncesAll.get(i).getLogin()+"###";
-        }  
-        out.println(message);
-        out.flush();
+        if( annoncesAll.size() > 0 ){
+            String message ="ALLANNS;";
+            for(int i = 0;i < annoncesAll.size();i++){
+                message += annoncesAll.get(i).getDomaine()+"***"+ annoncesAll.get(i).getContenu()+
+                "***"+annoncesAll.get(i).getRef()+"***"+annoncesAll.get(i).getPrix() + "***"+annoncesAll.get(i).getLogin()+"###";
+            }  
+            out.println(message);
+            out.flush();
+        }else{
+            out.println("ALLANNS;");
+            out.flush();
+        }     
     }
     private synchronized void afficherMesAnnoneces(Users usr){
         if(usr != null){
@@ -176,23 +191,47 @@ public class Fonctions implements Runnable{
         }
     }   
     private synchronized void afficherAnnonceParType(String type){
-        String message = "ANNONCE;";
-        for(int i = 0;i < annoncesAll.size();i++){
-            if(annoncesAll.get(i).getDomaine().equals(type)){
-                message += annoncesAll.get(i).getDomaine()+"***"+ annoncesAll.get(i).getContenu()+
-                "***"+annoncesAll.get(i).getRef()+"***"+annoncesAll.get(i).getPrix() + "***"+annoncesAll.get(i).getLogin()+"###";
-                }         
-        }    
-        out.println(message);
-        out.flush();
-
+        if(annoncesAll.size() > 0){
+            String message = "ANNONCE;";
+            for(int i = 0;i < annoncesAll.size();i++){
+                
+                if(annoncesAll.get(i).getDomaine().equals(type.toLowerCase())){
+                    message += annoncesAll.get(i).getDomaine()+"***"+ annoncesAll.get(i).getContenu()+
+                    "***"+annoncesAll.get(i).getRef()+"***"+annoncesAll.get(i).getPrix() + "***"+annoncesAll.get(i).getLogin()+"###";        
+                }else{
+                    out.println("FAIL;Il n' a pas d'annonces à ce type que vous avez choisi.");
+                    out.flush();
+                    break;
+                }
+            }
+            out.println(message);
+            out.flush();
+        }else{ 
+            out.println("FAIL;Il n'y a pas d'annonces.");
+            out.flush();
+        }
     }
-    private synchronized void envoiLePort(){
+    private synchronized void envoiLePort(String id_annonce){
+        for(int i = 0; i < annoncesAll.size(); i++){
+            if(annoncesAll.get(i).getRef() == Integer.parseInt(id_annonce)){
+                String login = annoncesAll.get(i).getLogin();
+                for(int j = 0; j < listUsersConncted.size(); j++){
+                    if(listUsersConncted.get(j).getPseudo().equals(login)){
+                        out.println(listUsersConncted.get(j).getPortUDP());
+                        out.flush();
+                        break;
+                    }else{
+                        out.println("FAIL;");
+                        out.flush();
+                        break;
+                    }
+                }
+            }
+        }
         out.println("MESSAGE;"+portUDP);
         out.flush();
-        portUDP++;
     }
-    private synchronized Users disconnection(Users usr){
+   private synchronized Users disconnection(Users usr){
         if(usr != null) {
             usr.setConnecte(false);
             usr = null;
@@ -205,15 +244,4 @@ public class Fonctions implements Runnable{
         return usr;
     }
    
-    private Users isExiste(String p){
-      
-        for(int i = 0; i < listUsersConncted.size(); i++){
-            if(!listUsersConncted.get(i).getPseudo().equals(p)){
-                return null;
-            } else{
-                return listUsersConncted.get(i);
-            }    
-        }
-       return null;
-    }
 }
