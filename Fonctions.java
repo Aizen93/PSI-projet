@@ -212,23 +212,18 @@ public class Fonctions implements Runnable{
         }
     }
     private synchronized void envoiLePort(String id_annonce){
+        String envoi = "MESSAGE;";
         for(int i = 0; i < annoncesAll.size(); i++){
-            if(annoncesAll.get(i).getRef() == Integer.parseInt(id_annonce)){
+            if(annoncesAll.get(i).getRef( ) == Integer.parseInt(id_annonce)){
                 String login = annoncesAll.get(i).getLogin();
                 for(int j = 0; j < listUsersConncted.size(); j++){
                     if(listUsersConncted.get(j).getPseudo().equals(login)){
-                        out.println(listUsersConncted.get(j).getPortUDP());
-                        out.flush();
-                        break;
-                    }else{
-                        out.println("FAIL;");
-                        out.flush();
-                        break;
+                       envoi+=listUsersConncted.get(j).getPortUDP();
                     }
                 }
             }
         }
-        out.println("MESSAGE;"+portUDP);
+        out.println(envoi);
         out.flush();
     }
    private synchronized Users disconnection(Users usr){
