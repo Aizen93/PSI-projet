@@ -14,7 +14,8 @@ class Client {
     private String command = "";
     private String message_to_send;
     private ClientUDP client_udp;
-    private	InetSocketAddress address;
+    private int current_user_udp_port = 0;
+    private InetSocketAddress address;
     private String username, password;
 
 
@@ -24,7 +25,7 @@ class Client {
         connection();
         buffered();
         this.sc = new Scanner(System.in);
-        Runtime.getRuntime().addShutdownHook(new Thread() {
+        /*Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
                 try {
                     Thread.sleep(200);
@@ -33,10 +34,10 @@ class Client {
                     System.exit(1);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
-                    e.printStackTrace();
+                    System.out.println("Main Client Thread interrupted - Throwed Exception catched in constructor!");
                 }
             }
-        });
+        });*/
     }
 
     public void menu() {
@@ -77,9 +78,8 @@ class Client {
                 case "ADDANNS":
                     addAnnounce();
                     break;
-                case "READALL":
-                    //System.out.println("You have "+ client_udp.sizeMessage());
-                	client_udp.read();
+                case "READ":
+                    client_udp.read(username, current_user_udp_port, sc);
                     break;
                 case "QUIT":
                     quitApply();
@@ -102,20 +102,18 @@ class Client {
     	String []tab = message_received.split(";");
     	//if les bon result
     	if(tab.length == 1 && tab[0].equals("MESSAGE")) {
-    		System.out.println("Sorry no annouce found with ref = "+ announce_ref);
+            System.out.println("Sorry no annouce found with ref = "+ announce_ref);
     	}else {
-	    	if(tab[0].equals("MESSAGE")) {
-	    		System.out.println("++++"+message_received);
-	    		address = new InetSocketAddress("localhost", Integer.parseInt(tab[1]));
-	        	System.out.print("Message : ");
-	        	message_to_send = "WRITETO;"+ username + ";" + sc.nextLine();
-	        	
-	        	client_udp.sendTo(address, message_to_send);
-	    	}else {
-	    		System.out.println("Error Server bad response !");
-	    	}
-    	}
-    	
+            if(tab[0].equals("MESSAGE")) {
+                address = new InetSocketAddress("localhost", Integer.parseInt(tab[1]));
+                System.out.print(">> Message : ");
+                message_to_send = "WRITETO;"+ username + ";" + current_user_udp_port + ";" + sc.nextLine();
+
+                client_udp.sendTo(address, message_to_send);
+            }else {
+                System.out.println("Error Server bad response !");
+            }
+    	}  	
     }
     
     private void disconnect(){
@@ -170,7 +168,8 @@ class Client {
             if(tab[0].equals("CONNECT")){
                 mode_disconnected = false;
                 client_udp = new ClientUDP();
-                client_udp.bind(Integer.parseInt(tab[1]));
+                current_user_udp_port = Integer.parseInt(tab[1]);
+                client_udp.bind(current_user_udp_port);
                 client_udp.start();
                 System.out.println("############################");
                 System.out.println("# Connection successfull ! #");
@@ -300,12 +299,12 @@ class Client {
 
     private void buffered() {
         try {
-            br=new BufferedReader(new InputStreamReader(so.getInputStream()));
+            br = new BufferedReader(new InputStreamReader(so.getInputStream()));
         } catch (IOException e) {
             System.out.println("Echec création BufferedReader");
         }
         try {
-            pw=new PrintWriter(new OutputStreamWriter(so.getOutputStream()));
+            pw = new PrintWriter(new OutputStreamWriter(so.getOutputStream()));
         } catch (IOException e) {
             System.out.println("Echec création PrintWriter");
         }
@@ -314,7 +313,6 @@ class Client {
     private void read() {
         try {
             message_received = br.readLine();
-            //System.out.println(mess);
         }catch (IOException e) {
             System.out.println("Echec du readLine");
         }
