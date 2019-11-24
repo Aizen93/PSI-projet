@@ -18,6 +18,7 @@ public class Server {
 
 	
 	public Server(ServerSocket s) {
+		System.out.println("--------------Server is now running -----------------------");
 		this.serv = s;
 		users = new ArrayList<User>();
 		annonces = new ArrayList<Annonce>();
@@ -98,7 +99,7 @@ public class Server {
 			this.so = s;
 			buffered();
 			this.user = null;
-			System.out.println("--------------Server is now Running-----------------------");
+			System.out.println("--------------New guest -----------------------");
 		}
 		
 		
@@ -118,8 +119,9 @@ public class Server {
 		private void read() {
 			try {
 				mess = br.readLine();
-		        System.out.println(mess);
-
+		        System.out.println("-------------------------------------------");
+		        System.out.println("----> Message receive : "+mess);
+		        System.out.println("-------------------------------------------");
 			} catch (IOException e) {
 				System.out.println("Echec du readLine");
 			}
@@ -127,11 +129,17 @@ public class Server {
 		
 		private void send() {
 	        pw.println(send);
+	        System.out.println("-------------------------------------------");
+	        System.out.println("----> Message send : "+send);
+	        System.out.println("-------------------------------------------");
 	        pw.flush();
 		}
 		
 		private synchronized int add_user(String pseudo, String mdp) {
+	        System.out.println("-------------------------------------------");
 			System.out.println("            ----> New User created");
+			System.out.println("                       pseudo : "+pseudo+", mdp : "+mdp);
+	        System.out.println("-------------------------------------------");
 			user = new User(pseudo, mdp, port_udp);
 			port_udp ++;
 			addUser(user);;
@@ -139,12 +147,15 @@ public class Server {
 		}
 		
 		private synchronized int connect(String pseudo, String mdp) {
-			System.out.println("pseudo : "+pseudo+", mdp : "+mdp);
 			for(User u : getUsers()) {
 				if( pseudo.equals(u.getPseudo()) ) {
 					if (mdp.equals(u.getMdp())) {
 						user = u;
 						user.setConnect(true);
+				        System.out.println("-------------------------------------------");
+						System.out.println("            ----> User connected");
+						System.out.println("                       pseudo : "+pseudo+", mdp : "+mdp);
+				        System.out.println("-------------------------------------------");
 						return u.getPortUDP();
 					}else {
 						return 0;
@@ -168,7 +179,6 @@ public class Server {
 
 		private void connect(String[] tab) {
 			if(tab.length == 3) {
-				System.out.println("run - login : "+tab[1]+", mdp : "+tab[2]);
 				int port = connect(tab[1], tab[2]);
 				if(port>0) {
 					send = "CONNECT;" + port;
@@ -176,7 +186,6 @@ public class Server {
 				else send = "FAIL;Wrong password"; 
 			}
 			else	send = "FAIL;Too many parameters"; 
-			System.out.println("send : "+send);
 			send();
 		}
 		
@@ -209,7 +218,7 @@ public class Server {
 						break;
 					case "ADDANNS" :
 						if (add_annonce(tab)) send = "OK";
-						else send = "FAIL";
+						else send = "FAIL;Can not add this announce";
 						send();
 						break;
 					case "ALLANNS" :
@@ -217,7 +226,6 @@ public class Server {
 						for(Annonce a : getAnnonces()) {
 							send += a.getType()+"***"+a.getDescription()+"***"+a.getRef()+"***"+a.getPrix()+"***"+a.getLogin()+"###";
 						}
-						System.out.println("ALLANNS : "+send);
 						send();
 						break;
 					case "ANNONCE" :
@@ -254,24 +262,20 @@ public class Server {
 						send();
 						break;
 					case "MESSAGE" :
+						send = null;
 						if(user == null) send = "FAIL;Error - you are not connected";
 						else {
 							int ref =  Integer.parseInt(tab[1]);
-							System.out.println("DEBUG --- ref = "+ref);
 							for(Annonce a : annonces) {
 								if(a.getRef() == ref) {
-									System.out.println("DEBUG --- annonce existante");
 									for(User u : users) {
 										if(u.getPseudo().equals(a.getLogin())) {
 											send = "MESSAGE;"+u.getPortUDP();
-											System.out.println(send);
-											send();
-											break;
 										}
 									}
 								}
 							}
-							send = "FAIL;Error - this annonce does not exist";
+							if(send == null) send = "FAIL;Error - this annonce does not exist";
 						}
 						send();
 						break;

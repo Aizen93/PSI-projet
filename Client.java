@@ -182,6 +182,7 @@ class Client {
         send(message_to_send);
         read();
         String[] res = message_received.split(";");
+
         if(res[0].equals("FAIL")){
             System.out.println("Error receiving " + command );
         }else if(res[0].equals(command)){
@@ -227,6 +228,7 @@ class Client {
             message_to_send = "ADDANNS;" + domain + ";" + price + ";" + description;
             send(message_to_send);
             read();
+            //System.out.println("DEBUG --- "+message_received);
             if(message_received.equals("OK")){
                 System.out.println("Announce added succefully !");
             }else if(message_received.equals("FAIL")){
