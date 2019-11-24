@@ -24,6 +24,19 @@ class Client {
         connection();
         buffered();
         this.sc = new Scanner(System.in);
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            public void run() {
+                try {
+                    Thread.sleep(200);
+                    quitApply();
+                    exit = true;
+                    System.exit(1);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
     public void menu() {
