@@ -73,7 +73,6 @@ public class Fonctions implements Runnable{
         	if(u==null)	nameClient = "invite";
         	else	nameClient = u.getPseudo();
         	System.out.println("Le Client " + nameClient +  " s'est déconnecté de manière brutale");
-//            System.exit(1);
             quit();
         }
     }
@@ -94,13 +93,30 @@ public class Fonctions implements Runnable{
 	}
 
 	private Users connect(String msg[]) {
-        String pseudo = msg[1];
-        String mdp = msg[2];
+        String pseudo="",mdp="",ip = "";
+        try{
+            pseudo = msg[1].trim();
+        }catch(NullPointerException e){
+            out.println("FAIL;ous n'avez pas tapé votre pseudo.");
+            System.out.println("Vous n'avez pas tapé votre pseudo.");
+        }
+        try{
+            mdp = msg[2].trim();
+        }catch(NullPointerException e){
+            out.println("FAIL;Vous n'avez pas tapé votre mot de passe.");
+            System.out.println("Vous n'avez pas tapé votre mot de passe.");
+        }
+        try{
+            ip = msg[3];
+        }catch(NullPointerException e){
+            out.println("FAIL;Vous n'avez pas tapé votre IP.");
+            System.out.println("Vous n'avez pas tapé votre IP.");
+        }
         Users user = null;
         for(Users u : listUsersConnected) {
             if( pseudo.equals(u.getPseudo())) {
             	if(u.getConnect()) {
-            		out.println("FAIL;Vous etes deja connecté");
+            		out.println("FAIL;Vous êtes déjà connecté");
             		out.flush();
             		user = u;
             		break;
@@ -117,7 +133,7 @@ public class Fonctions implements Runnable{
             }
         }
         if(user == null){
-        	user = new Users(pseudo, mdp,portUDP);
+        	user = new Users(pseudo, mdp,portUDP,ip);
         	portUDP++;
         	listUsersConnected.add(user);        	
         }
@@ -126,53 +142,61 @@ public class Fonctions implements Runnable{
         return user;
     }
     private synchronized void addAnnonce(Users user,String[]token){
+        String domaine="", desc = "";
         if(user == null) {
             out.println("FAIL;vous n'êtes pas connectés");
         } else if(user!= null && token[2].trim().matches("\\d+")){
             ref++;
-            Annonce a = new Annonce(ref,user.getPseudo().trim(),token[1].trim().toLowerCase(), Integer.parseInt(token[2].trim()),token[3].trim());
+             try{
+                domaine = token[1].trim().toLowerCase();
+            }catch(NullPointerException e){
+                out.println("FAIL;Le domaine est vide.");
+                System.out.println("Le domaine est vide.");
+            }
+            try{
+                desc = token[3].trim();
+            }catch(NullPointerException e){
+                out.println("FAIL;La description est vide.");
+                System.out.println("La description est vide.");
+            }
+            Annonce a = new Annonce(ref,user.getPseudo().trim(),domaine, Integer.parseInt(token[2].trim()),desc);
             annoncesAll.add(a);
             out.println("OK");
         } else {
-        	out.println("FAIL;le prix indiqué n'est pas un nombre");
+            out.println("FAIL;le prix indiqué n'est pas un nombre");
         }
         out.flush();
     }
     private synchronized void deleteAnnonceParRef(Users u,String ref){
-        if(u == null){
+        try{
+            if(u == null){
             out.println("FAIL;vous êtes déconnectés.");
             out.flush();
-        }else if( u !=  null && (annoncesAll.size() > 0)){
-            for (int i = 0; i < annoncesAll.size() ; i++) {
-                if(annoncesAll.get(i).getRef() == Integer.parseInt(ref)){
-                	if(annoncesAll.get(i).getLogin().equals(u.getPseudo())) {
-                		annoncesAll.remove(i);
-                		out.println("OK");
-                		out.flush();
-                	}/* else if(annoncesAll.contains(Integer.parseInt(ref))) {
-                		out.println("FAIL;l'annonce a été supprimé.");
-                        out.flush();
-                    }*/else{
-                        out.println("FAIL;vous n'êtes pas le propriétaire de l'annonce.");
-                        out.flush();
+            }else if( u !=  null && (annoncesAll.size() > 0)){
+                for (int i = 0; i < annoncesAll.size() ; i++) {
+                    if(annoncesAll.get(i).getRef() == Integer.parseInt(ref)){
+                        if(annoncesAll.get(i).getLogin().equals(u.getPseudo())) {
+                            annoncesAll.remove(i);
+                            out.println("OK");
+                            out.flush();
+                        }else{
+                            out.println("FAIL;vous n'êtes pas le propriétaire de l'annonce.");
+                            out.flush();
+                        }
+                        break;
                     }
-                	break;
-                }/*else if(!annoncesAll.contains(Integer.parseInt(ref)) && ref.trim().matches("\\d+") ){
-                    out.println("FAIL;Il n'a pas d'annonce avec le numero de ref que vous aves donnés.");
-                    out.flush();
-                    break;
-                }*//*else if(!ref.trim().matches("\\d+")){
-                    out.println("FAIL;Vous n'avez pas tapés un nombre.");
-                    out.flush();
-                }*/
-            }
-        } else if( u!=null && annoncesAll.size() == 0 && !ref.trim().matches("\\d+")){
-            out.println("FAIL;Vous n'avez pas tapés un nombre et il n'a pas d'annonces.");
-            out.flush();
-        } else if( u!=null && annoncesAll.size() == 0){
-            out.println("FAIL;Il n'y a pas d'annonces.");
-            out.flush(); 
-        }     
+                }
+            } else if( u!=null && annoncesAll.size() == 0 && !ref.trim().matches("\\d+")){
+                out.println("FAIL;Vous n'avez pas tapés un nombre et il n'a pas d'annonces.");
+                out.flush();
+            } else if( u!=null && annoncesAll.size() == 0){
+                out.println("FAIL;Il n'y a pas d'annonces.");
+                out.flush(); 
+            }     
+        }catch(NullPointerException e){
+            System.out.println("La référence est vide.");
+        }
+        
     }
     private synchronized void afficherAllAnnonces(){
         if( annoncesAll.size() > 0 ){
@@ -205,7 +229,7 @@ public class Fonctions implements Runnable{
         }
     }   
     private synchronized void afficherAnnonceParType(String type){
-//        if(annoncesAll.size() > 0){
+        try{
             String message = "ANNONCE;";
             for(int i = 0;i < annoncesAll.size();i++){                
                 if(annoncesAll.get(i).getDomaine().equals(type.toLowerCase())){
@@ -213,39 +237,40 @@ public class Fonctions implements Runnable{
                     "***"+annoncesAll.get(i).getRef()+"***"+annoncesAll.get(i).getPrix() + "***"+annoncesAll.get(i).getLogin()+"###";        
                 }
             }
-//            if(message.equals("ANNONCE;"))
-//            out.println("FAIL;Il n' a pas d'annonces à ce type que vous avez choisi.");
-//            out.flush();
             out.println(message);
             out.flush();
-//        }
-//        else{ 
-//            out.println("FAIL;Il n'y a pas d'annonces.");
-//            out.flush();
-//        }
+        }catch(Exception e){
+            System.out.println("Le domaine (ou le type) de recherche est vide.");
+        }
+           
     }
     private synchronized void envoiLePort(String id_annonce){
-        String envoi = "MESSAGE;";
-        int portUDP = 0;
-        for(int i = 0; i < annoncesAll.size(); i++){
-            if(annoncesAll.get(i).getRef( ) == Integer.parseInt(id_annonce)){
-                String login = annoncesAll.get(i).getLogin();
-                System.out.println("DEBUG - " + login);
-                for(int j = 0; j < listUsersConnected.size(); j++){
-                    if(listUsersConnected.get(j).getPseudo().equals(login)){
-                       portUDP=listUsersConnected.get(j).getPortUDP();
-                       break;
+        try{
+            String envoi = "MESSAGE;";
+            int portUDP = 0;
+            String ip = "";
+            for(int i = 0; i < annoncesAll.size(); i++){
+                if(annoncesAll.get(i).getRef( ) == Integer.parseInt(id_annonce)){
+                    String login = annoncesAll.get(i).getLogin();
+                    for(int j = 0; j < listUsersConnected.size(); j++){
+                        if(listUsersConnected.get(j).getPseudo().equals(login)){
+                        portUDP=listUsersConnected.get(j).getPortUDP();
+                        ip = listUsersConnected.get(j).getIP();
+                        break;
+                        }
                     }
+                    break;
                 }
-                break;
             }
-        }
-        if(portUDP==0) {
-        	out.println("FAIL;L'annonce n'existe pas");
-        } else {
-        	out.println(envoi+portUDP);
-        }
-        out.flush();
+            if(portUDP==0) {
+                out.println("FAIL;L'annonce n'existe pas");
+            } else {
+                out.println(envoi+portUDP+ip);
+            }
+            out.flush();    
+        }catch(NullPointerException e){
+            System.out.println("L'ID d'annonce est vide.");
+        }    
     }
     private synchronized Users disconnection(Users usr){
         if(usr != null) {
