@@ -5,7 +5,6 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.*;
 import java.util.ArrayList;
-import java.util.Scanner;
 
 public class Server {
 	
@@ -18,7 +17,7 @@ public class Server {
 
 	
 	public Server(ServerSocket s) {
-		System.out.println("--------------Server is now running -----------------------");
+		System.out.println(Color.GREEN_BOLD_BRIGHT + "--------------Server is now running -----------------------" + Color.ANSI_RESET);
 		this.serv = s;
 		users = new ArrayList<User>();
 		annonces = new ArrayList<Annonce>();
@@ -31,7 +30,7 @@ public class Server {
 			}	
 		}
 		catch (Exception e) {
-			System.out.println("Error - Connection to thread failed");
+			System.out.println(Color.RED_BRIGHT + "Error - Connection to thread failed" + Color.ANSI_RESET);
 		}
 
 	}
@@ -99,7 +98,7 @@ public class Server {
 			this.so = s;
 			buffered();
 			this.user = null;
-			System.out.println("--------------New guest -----------------------");
+			System.out.println(Color.YELLOW_BRIGHT + "--------------New guest -----------------------" + Color.ANSI_RESET);
 		}
 		
 		

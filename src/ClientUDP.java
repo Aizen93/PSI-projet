@@ -8,6 +8,7 @@ import java.util.Scanner;
 
 public class ClientUDP  implements Runnable {
     private DatagramSocket socket;
+    private Thread thread;
     private boolean running;
     private LinkedList<Message> messages;
 
@@ -18,13 +19,15 @@ public class ClientUDP  implements Runnable {
 
     public void start(){
         this.messages = new LinkedList<>();
-        Thread thread = new Thread(this);
+        thread = new Thread(this);
         thread.start();
     }
 
     public void stop(){
         running = false;
         socket.close();
+        messages.clear();
+        thread.stop();//- DEPRECATED, a changer par un system de boolean comme indiqué sur la java doc 
     }
 
     @Override
