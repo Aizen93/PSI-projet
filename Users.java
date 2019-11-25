@@ -1,14 +1,15 @@
 public class Users {
 
-    private String pseudo,mdp;
+    private String pseudo,mdp,ip;
     private int portUDP; 
     private boolean connect;
 
 		
-    public Users(String _pseudo, String _mdp,int _portUDP) {
+    public Users(String _pseudo, String _mdp,int _portUDP,String _ip) {
         this.pseudo = _pseudo;
         this.mdp = _mdp;
         this.portUDP = _portUDP;
+        this.ip = _ip;
         this.connect = true;
     }
 
@@ -19,12 +20,15 @@ public class Users {
         return this.pseudo;
     }
     public boolean getConnect(){
-        return connect;
+        return this.connect;
     }
     public void setConnect(boolean v){
         this.connect = v;
     }
     public int getPortUDP(){
-        return portUDP;
+        return this.portUDP;
+    }
+    public String getIP(){
+        return this.ip;
     }
 }
