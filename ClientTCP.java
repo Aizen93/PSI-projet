@@ -16,9 +16,9 @@ public class ClientTCP {
 	private boolean isConnected;
 
 
-	public ClientTCP() {
+	public ClientTCP(String ip) {
 		try {
-			this.socket = new Socket("localhost", this.portTCPServer);
+			this.socket = new Socket(ip, this.portTCPServer);
 			this.printWriter = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
 			this.bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			this.inFromUser = new Scanner(System.in);
@@ -30,7 +30,15 @@ public class ClientTCP {
 	}
 
 	public static void main(String[] args) {
-		ClientTCP clientTCP = new ClientTCP();
+		String ip = "localhost";
+		Scanner scanner = new Scanner(System.in);
+		try {
+			ip = scanner.nextLine();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		scanner.close();
+		ClientTCP clientTCP = new ClientTCP(ip);
 		if(clientTCP.socket==null)	return;
 		clientTCP.inFromUser = new Scanner(System.in);
 		boolean connected = true;
@@ -47,7 +55,10 @@ public class ClientTCP {
 				clientTCP.quit();
 				break;
 			case "1":
-				if(!clientTCP.isConnected)	portUDP = clientTCP.connect();
+				if(!clientTCP.isConnected) {
+					portUDP = clientTCP.connect();
+					System.out.println("DEBUG - le port UDP récupéré par le serveur est : " + portUDP);
+				}
 				else	System.out.println("Vous etes deja connecte");
 //				clientTCP.createUDP(portUDP);
 				break;
@@ -70,9 +81,9 @@ public class ClientTCP {
 				clientTCP.deleteAnnonce();
 				break;
 			case "8":
-				portUDP = clientTCP.sendMessage();
-				System.out.println(portUDP);
-				if(portUDP!=-1)	clientTCP.sendUDP(portUDP);
+				int portUDPSend = clientTCP.sendMessage();
+				System.out.println(portUDPSend);
+				if(portUDP!=-1)	clientTCP.sendUDP(portUDPSend);
 				else	System.out.println("L'annonce n'existe pas");
 				break;
 			case "9":
@@ -122,7 +133,7 @@ public class ClientTCP {
 		String mdp = inFromUser.nextLine();
 		try {
 			// Ecriture et envoi du message
-			String message = "CONNECT;"+pseudo+";"+mdp;
+			String message = "CONNECT;"+pseudo+";"+mdp+";"+socket.getInetAddress().toString().replace("/", "");
 			printWriter.println(message);
 			printWriter.flush();
 			//Lecture
@@ -273,12 +284,13 @@ public class ClientTCP {
 		}
 	}
 
-	//TODO: A modifier si on recoit @IP + portUDP
+	//TODO: A modifier si on recoit @IP + portUDP : Renvoyer un DatahramSocket ? ou un couple (IP+port)
 	public int sendMessage() {
 		System.out.println("Entrez la ref de l'annonce de l'utilisateur à contacter : ");
 		String ref = inFromUser.nextLine();
 		try {
 			int portUDP = -1;
+			String adresseUDP;
 			String message = "MESSAGE;"+ref;
 			printWriter.println(message);
 			printWriter.flush();
@@ -287,6 +299,7 @@ public class ClientTCP {
 			String[] receptionSplit = reception.split(";");
 			if(receptionSplit[0].equals("MESSAGE")) {
 				portUDP = Integer.parseInt(receptionSplit[1]);
+				adresseUDP = receptionSplit[2];
 //				System.out.println("DEBUG - Port UDP récupéré : " + receptionSplit[1]);
 			} else if(receptionSplit[0].equals("FAIL")){
 				System.out.println(receptionSplit[1]);
@@ -306,7 +319,7 @@ public class ClientTCP {
 		try {
 			System.out.println("Entrez votre message :");
 			String msg = inFromUser.nextLine();
-			String msgSend = "WRITETO;"+pseudoCourant+";"+portUDP+";"+msg;
+			String msgSend = "WRITETO;"+pseudoCourant+";"+clientUDP.getPortUDP()+";"+msg;
 			clientUDP.sendTo(portUDP, msgSend);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -324,7 +337,14 @@ public class ClientTCP {
 	
 	public void repondre(Message m) {
 		System.out.println("Voulez vous répondre ? (oui|non)");
-		
+		try {
+			String reponse = inFromUser.nextLine();
+			if(reponse.toLowerCase().equals("oui")) {
+				sendUDP(m.getPortUDP());
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	//------------------------------------------------------------------------------------------------------------

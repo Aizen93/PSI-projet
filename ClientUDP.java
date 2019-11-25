@@ -44,12 +44,10 @@ public class ClientUDP implements Runnable {
 				socket.receive(packet);
 
 				String msg = new String(buffer, 0, packet.getLength());
-				System.out.println(msg);
+//				System.out.println("DEBUG - " + msg);
 				String[] message = msg.split(";");
 				file.add(new Message(message[1], Integer.parseInt(message[2]), message[3]));
-				
-				System.out.println(msg);
-			} 
+							} 
 			catch (IOException e) {
 				break;
 			}

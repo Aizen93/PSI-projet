@@ -102,7 +102,8 @@ public class Fonctions implements Runnable{
             	if(u.getConnect()) {
             		out.println("FAIL;Vous etes deja connecté");
             		out.flush();
-            		return u;
+            		user = u;
+            		break;
             	}
             	else if (mdp.equals(u.getMdp())) {
                     user = u;
@@ -229,6 +230,7 @@ public class Fonctions implements Runnable{
         for(int i = 0; i < annoncesAll.size(); i++){
             if(annoncesAll.get(i).getRef( ) == Integer.parseInt(id_annonce)){
                 String login = annoncesAll.get(i).getLogin();
+                System.out.println("DEBUG - " + login);
                 for(int j = 0; j < listUsersConnected.size(); j++){
                     if(listUsersConnected.get(j).getPseudo().equals(login)){
                        portUDP=listUsersConnected.get(j).getPortUDP();
