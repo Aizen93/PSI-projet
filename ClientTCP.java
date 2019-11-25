@@ -13,6 +13,7 @@ public class ClientTCP {
 	private Scanner inFromUser;
 	private String pseudoCourant;
 	private ClientUDP clientUDP;
+	private boolean isConnected;
 
 
 	public ClientTCP() {
@@ -22,6 +23,7 @@ public class ClientTCP {
 			this.bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			this.inFromUser = new Scanner(System.in);
 			this.pseudoCourant = "invite";
+			this.isConnected = false;
 		} catch(Exception e) {
 			System.out.println("Connexion impossible, le Serveur n'a peut etre pas démarré");
 		}	
@@ -45,7 +47,8 @@ public class ClientTCP {
 				clientTCP.quit();
 				break;
 			case "1":
-				portUDP = clientTCP.connect();
+				if(!clientTCP.isConnected)	portUDP = clientTCP.connect();
+				else	System.out.println("Vous etes deja connecte");
 //				clientTCP.createUDP(portUDP);
 				break;
 			case "2":
@@ -73,7 +76,8 @@ public class ClientTCP {
 				else	System.out.println("L'annonce n'existe pas");
 				break;
 			case "9":
-				clientTCP.clientUDP.readOne();
+				Message m = clientTCP.clientUDP.readOne();
+				clientTCP.repondre(m);
 				break;
 			case "10":
 				clientTCP.clientUDP.readAll();
@@ -128,6 +132,7 @@ public class ClientTCP {
 				System.out.println("Connection réussi");
 				setPseudoCourant(pseudo);
 				createUDP(Integer.parseInt(receptionSplit[1]));	//Demarre l'ecoute en UDP
+				this.isConnected = true;
 			} else if(receptionSplit[0].equals("FAIL")) {
 				System.out.println(receptionSplit[1]);
 				return -1;
@@ -160,6 +165,7 @@ public class ClientTCP {
 				System.out.println("Déconnection réussi");
 				pseudoCourant = "invite";
 				if(clientUDP!=null)	clientUDP.stop();
+				isConnected = false;
 			}			
 			return true;
 		} catch (NullPointerException e) {
@@ -168,6 +174,33 @@ public class ClientTCP {
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.err.println("Deconnection impossible");
+			return false;
+		}
+	}
+	
+	public boolean addAnnonce() {
+		System.out.println("Entrez le domaine : ");
+		String domaine = inFromUser.nextLine();
+		System.out.println("Entrez le prix : ");
+		String prix = inFromUser.nextLine();
+		System.out.println("Entrez la description : ");
+		String description = inFromUser.nextLine();
+		try {
+			String message = "ADDANNS;"+domaine+";"+prix+";"+description;
+			printWriter.println(message);
+			printWriter.flush();
+			//Lecture
+			String reception = bufferedReader.readLine();
+			String[] receptionSplit = reception.split(";");
+			if(receptionSplit[0].equals("OK")) {
+				System.out.println("Annonce ajouté");
+			} else if(receptionSplit[0].equals("FAIL")){
+				System.out.println(receptionSplit[1]);
+			}
+			return true;
+		} catch (NullPointerException e) {
+			System.err.println("Vous n'etes plus connecté au serveur");
+		} finally {
 			return false;
 		}
 	}
@@ -186,10 +219,10 @@ public class ClientTCP {
 			String reception = bufferedReader.readLine();
 			String[] receptionSplit = reception.split(";");
 			if(receptionSplit[0].equals("FAIL")){
-				System.out.println("Error receiving " + annonce );
+				System.out.println(receptionSplit[1]);
 			}else if(receptionSplit[0].equals(annonce)){
 				if(receptionSplit.length == 1 ){
-					System.out.println("Nothing published yet, use ADDANNS to be the first to publish an annouce");
+					System.out.println("Il n'y a pas encore d'annonce");
 				}else if(receptionSplit.length > 1){
 					System.out.println("All announces online :");
 					String[] tmp = receptionSplit[1].split("###");
@@ -232,46 +265,6 @@ public class ClientTCP {
 			} else if(receptionSplit[0].equals("FAIL")){
 				System.out.println(receptionSplit[1]);
 			}
-			return true;
-		} catch (NullPointerException e) {
-			System.err.println("Vous n'etes plus connecté au serveur");
-		} finally {
-			return false;
-		}
-	}
-
-	public boolean addAnnonce() {
-		System.out.println("Entrez le domaine : ");
-		String domaine = inFromUser.nextLine();
-		System.out.println("Entrez le prix : ");
-		String prix = inFromUser.nextLine();
-		System.out.println("Entrez la description : ");
-		String description = inFromUser.nextLine();
-		try {
-			String message = "ADDANNS;"+domaine+";"+prix+";"+description;
-			printWriter.println(message);
-			printWriter.flush();
-			//Lecture
-			String reception = bufferedReader.readLine();
-			String[] receptionSplit = reception.split(";");
-			if(receptionSplit[0].equals("OK")) {
-				System.out.println("Annonce ajouté");
-			} else if(receptionSplit[0].equals("FAIL")){
-				System.out.println(receptionSplit[1]);
-			}
-			return true;
-		} catch (NullPointerException e) {
-			System.err.println("Vous n'etes plus connecté au serveur");
-		} finally {
-			return false;
-		}
-	}
-
-	public boolean consultMess() {
-		try {
-			String message = "CONSU";
-			printWriter.println(message);
-			printWriter.flush();
 			return true;
 		} catch (NullPointerException e) {
 			System.err.println("Vous n'etes plus connecté au serveur");
@@ -329,7 +322,8 @@ public class ClientTCP {
 		}
 	}
 	
-	public void readOne() {
+	public void repondre(Message m) {
+		System.out.println("Voulez vous répondre ? (oui|non)");
 		
 	}
 

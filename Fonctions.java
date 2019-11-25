@@ -80,6 +80,8 @@ public class Fonctions implements Runnable{
     
     private void quit() {
         try{
+        	out.println("OK");
+        	out.flush();
             out.close();
             in.close();
             socket.close();
@@ -97,7 +99,12 @@ public class Fonctions implements Runnable{
         Users user = null;
         for(Users u : listUsersConnected) {
             if( pseudo.equals(u.getPseudo())) {
-                if (mdp.equals(u.getMdp())) {
+            	if(u.getConnect()) {
+            		out.println("FAIL;Vous etes deja connecté");
+            		out.flush();
+            		return u;
+            	}
+            	else if (mdp.equals(u.getMdp())) {
                     user = u;
                     user.setConnect(true);
                     break;
@@ -120,14 +127,15 @@ public class Fonctions implements Runnable{
     private synchronized void addAnnonce(Users user,String[]token){
         if(user == null) {
             out.println("FAIL;vous n'êtes pas connectés");
-            out.flush();
         } else if(user!= null && token[2].trim().matches("\\d+")){
             ref++;
             Annonce a = new Annonce(ref,user.getPseudo().trim(),token[1].trim().toLowerCase(), Integer.parseInt(token[2].trim()),token[3].trim());
             annoncesAll.add(a);
             out.println("OK");
-            out.flush();
+        } else {
+        	out.println("FAIL;le prix indiqué n'est pas un nombre");
         }
+        out.flush();
     }
     private synchronized void deleteAnnonceParRef(Users u,String ref){
         if(u == null){
@@ -143,16 +151,16 @@ public class Fonctions implements Runnable{
                 	}/* else if(annoncesAll.contains(Integer.parseInt(ref))) {
                 		out.println("FAIL;l'annonce a été supprimé.");
                         out.flush();
-                    }else{
+                    }*/else{
                         out.println("FAIL;vous n'êtes pas le propriétaire de l'annonce.");
                         out.flush();
-                    }*/
+                    }
                 	break;
                 }/*else if(!annoncesAll.contains(Integer.parseInt(ref)) && ref.trim().matches("\\d+") ){
                     out.println("FAIL;Il n'a pas d'annonce avec le numero de ref que vous aves donnés.");
                     out.flush();
                     break;
-                }else if(!ref.trim().matches("\\d+")){
+                }*//*else if(!ref.trim().matches("\\d+")){
                     out.println("FAIL;Vous n'avez pas tapés un nombre.");
                     out.flush();
                 }*/
@@ -196,25 +204,24 @@ public class Fonctions implements Runnable{
         }
     }   
     private synchronized void afficherAnnonceParType(String type){
-        if(annoncesAll.size() > 0){
+//        if(annoncesAll.size() > 0){
             String message = "ANNONCE;";
-            for(int i = 0;i < annoncesAll.size();i++){
-                
+            for(int i = 0;i < annoncesAll.size();i++){                
                 if(annoncesAll.get(i).getDomaine().equals(type.toLowerCase())){
                     message += annoncesAll.get(i).getDomaine()+"***"+ annoncesAll.get(i).getContenu()+
                     "***"+annoncesAll.get(i).getRef()+"***"+annoncesAll.get(i).getPrix() + "***"+annoncesAll.get(i).getLogin()+"###";        
-                }else{
-                    out.println("FAIL;Il n' a pas d'annonces à ce type que vous avez choisi.");
-                    out.flush();
-                    break;
                 }
             }
+//            if(message.equals("ANNONCE;"))
+//            out.println("FAIL;Il n' a pas d'annonces à ce type que vous avez choisi.");
+//            out.flush();
             out.println(message);
             out.flush();
-        }else{ 
-            out.println("FAIL;Il n'y a pas d'annonces.");
-            out.flush();
-        }
+//        }
+//        else{ 
+//            out.println("FAIL;Il n'y a pas d'annonces.");
+//            out.flush();
+//        }
     }
     private synchronized void envoiLePort(String id_annonce){
         String envoi = "MESSAGE;";

@@ -73,7 +73,8 @@ public class ClientUDP implements Runnable {
 		try {
 			m = file.poll();
 			System.out.println("Message envoyé par : "+ m.getPseudo());
-			System.out.println(m.getMessage());			
+			System.out.println(m.getMessage());
+			System.out.println("Voulez vous répondre ?");
 		} catch (NullPointerException e) {
 			System.out.println("Votre liste de message est vide");
 		}
