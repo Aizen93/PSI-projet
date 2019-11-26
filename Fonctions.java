@@ -9,11 +9,10 @@ public class Fonctions implements Runnable{
     private BufferedReader in ;
     private String protocole;
     private static int ref = 0;      
-    private static ArrayList<Users> listUsersConnected = new ArrayList<Users>() ;
+    private static ArrayList<Users> listUsers = new ArrayList<Users>() ;
     private static ArrayList<Annonce> annoncesAll = new ArrayList<Annonce>();
     private static int portUDP = 8531;
 
-    
     public Fonctions(Socket _socket) {
         this.socket = _socket;
     }
@@ -51,10 +50,20 @@ public class Fonctions implements Runnable{
                         afficherMesAnnoneces(u);
                         break;
                     case "ANNONCE":
-                        afficherAnnonceParType(token[1]);
+                        try{
+                            afficherAnnonceParType(token[1]);
+                        }catch(ArrayIndexOutOfBoundsException e){
+                            System.out.println("Le domaine est vide");
+                        }
                         break;
                     case "DELANNS":
-                        deleteAnnonceParRef(u,token[1]);
+                        try{
+                            deleteAnnonceParRef(u,token[1]);
+                        }catch(ArrayIndexOutOfBoundsException e){
+                            out.println("FAIL;vous n'avez pas tapés la référence.");
+                            out.flush();
+                        }
+                        
                         break;
                     case "MESSAGE":
                         envoiLePort(token[1]);
@@ -91,29 +100,10 @@ public class Fonctions implements Runnable{
             System.exit(1);
         }
 	}
-
 	private Users connect(String msg[]) {
         String pseudo="",mdp="",ip = "";
-        try{
-            pseudo = msg[1].trim();
-        }catch(NullPointerException e){
-            out.println("FAIL;ous n'avez pas tapé votre pseudo.");
-            System.out.println("Vous n'avez pas tapé votre pseudo.");
-        }
-        try{
-            mdp = msg[2].trim();
-        }catch(NullPointerException e){
-            out.println("FAIL;Vous n'avez pas tapé votre mot de passe.");
-            System.out.println("Vous n'avez pas tapé votre mot de passe.");
-        }
-        try{
-            ip = msg[3];
-        }catch(NullPointerException e){
-            out.println("FAIL;Vous n'avez pas tapé votre IP.");
-            System.out.println("Vous n'avez pas tapé votre IP.");
-        }
         Users user = null;
-        for(Users u : listUsersConnected) {
+        for(Users u : listUsers) {
             if( pseudo.equals(u.getPseudo())) {
             	if(u.getConnect()) {
             		out.println("FAIL;Vous êtes déjà connecté");
@@ -133,67 +123,109 @@ public class Fonctions implements Runnable{
             }
         }
         if(user == null){
-        	user = new Users(pseudo, mdp,portUDP,ip);
-        	portUDP++;
-        	listUsersConnected.add(user);        	
+            try{
+                pseudo = msg[1].trim();
+            }catch(ArrayIndexOutOfBoundsException e){
+                out.println("FAIL;ous n'avez pas tapé votre pseudo.");
+                System.out.println("Le client n'a pas tapé son pseudo.");
+            }
+            try{
+                mdp = msg[2].trim();
+            }catch(ArrayIndexOutOfBoundsException e){
+                out.println("FAIL;Vous n'avez pas tapé votre mot de passe.");
+                System.out.println("Le client n'a pas tapé son mot de passe.");
+            }
+            try{
+                ip = msg[3].trim();
+                user = new Users(pseudo, mdp,portUDP,ip);
+        	    portUDP++;
+        	    listUsers.add(user);   
+                out.println("CONNECT;"+user.getPortUDP()+";"+user.getIP());  
+            }catch(ArrayIndexOutOfBoundsException e){
+                out.println("FAIL;Vous n'avez pas tapé votre IP.");
+                System.out.println("Le client n'a pas tapé son IP.");
+            }
+            out.flush();   	
         }
-        out.println("CONNECT;"+user.getPortUDP());
-        out.flush();
         return user;
     }
     private synchronized void addAnnonce(Users user,String[]token){
-        String domaine="", desc = "";
+        String domaine="",description = "";
+        int prix = 0;
         if(user == null) {
             out.println("FAIL;vous n'êtes pas connectés");
-        } else if(user!= null && token[2].trim().matches("\\d+")){
-            ref++;
-             try{
-                domaine = token[1].trim().toLowerCase();
-            }catch(NullPointerException e){
-                out.println("FAIL;Le domaine est vide.");
-                System.out.println("Le domaine est vide.");
-            }
+    
+        } else if(user!= null){
             try{
-                desc = token[3].trim();
-            }catch(NullPointerException e){
-                out.println("FAIL;La description est vide.");
-                System.out.println("La description est vide.");
+                prix = Integer.parseInt(token[2].trim());
+                try{
+                    domaine = token[1].trim().toLowerCase();
+                }catch(ArrayIndexOutOfBoundsException e){
+                    out.println("FAIL;Le domaine est vide.");
+                    System.out.println("Le domaine est vide.");
+                }
+                try{
+                    description = token[3].trim();
+                    ref++;
+                    Annonce a = new Annonce(ref,user.getPseudo().trim(),domaine,prix,description);
+                    annoncesAll.add(a);
+                    out.println("OK");
+                }catch(ArrayIndexOutOfBoundsException e){
+                    out.println("FAIL;La description est vide.");
+                    System.out.println("La description est vide.");
+                }
+                }catch(ArrayIndexOutOfBoundsException e){
+                    out.println("FAIL;Le prix est vide.");
+            }catch(NumberFormatException e){
+                out.println("FAIL;Le prix n'est pas un nombre.");
             }
-            Annonce a = new Annonce(ref,user.getPseudo().trim(),domaine, Integer.parseInt(token[2].trim()),desc);
-            annoncesAll.add(a);
-            out.println("OK");
+           
         } else {
             out.println("FAIL;le prix indiqué n'est pas un nombre");
         }
         out.flush();
     }
     private synchronized void deleteAnnonceParRef(Users u,String ref){
+        String reference = "";
         try{
-            if(u == null){
-            out.println("FAIL;vous êtes déconnectés.");
-            out.flush();
-            }else if( u !=  null && (annoncesAll.size() > 0)){
+            
+            if(u == null && ref != null){
+                out.println("FAIL;vous êtes déconnectés.");
+                out.flush();
+            }else if( u !=  null && (annoncesAll.size() > 0) && ref != null){
                 for (int i = 0; i < annoncesAll.size() ; i++) {
-                    if(annoncesAll.get(i).getRef() == Integer.parseInt(ref)){
-                        if(annoncesAll.get(i).getLogin().equals(u.getPseudo())) {
-                            annoncesAll.remove(i);
-                            out.println("OK");
-                            out.flush();
-                        }else{
-                            out.println("FAIL;vous n'êtes pas le propriétaire de l'annonce.");
-                            out.flush();
+                    try{
+                        reference = ref.trim();
+                        if(annoncesAll.get(i).getRef() == Integer.parseInt(reference)){
+                            if(annoncesAll.get(i).getLogin().equals(u.getPseudo())) {
+                                annoncesAll.remove(i);
+                                out.println("OK");
+                                out.flush();
+                            }else{
+                                out.println("FAIL;vous n'êtes pas le propriétaire de l'annonce.");
+                                out.flush();
+                            }
                         }
                         break;
+                    }catch(NumberFormatException e){
+                        out.println("FAIL;la référence n'est pas un nombre.");
+                        out.flush();
                     }
                 }
-            } else if( u!=null && annoncesAll.size() == 0 && !ref.trim().matches("\\d+")){
-                out.println("FAIL;Vous n'avez pas tapés un nombre et il n'a pas d'annonces.");
-                out.flush();
-            } else if( u!=null && annoncesAll.size() == 0){
+            } else if( u!=null && annoncesAll.size() == 0 && ref != null){
+                try{
+                    int r = Integer.parseInt(ref.trim());
+                }catch(NumberFormatException e){
+                    out.println("FAIL;Vous n'avez pas tapés un nombre et il n'a pas d'annonces.");
+                    out.flush();
+                }  
+            } else if( u!=null && annoncesAll.size() == 0 && ref != null){
                 out.println("FAIL;Il n'y a pas d'annonces.");
                 out.flush(); 
-            }     
-        }catch(NullPointerException e){
+            }  
+                       
+        }catch(ArrayIndexOutOfBoundsException e){
+            out.println("FAIL;La référence est vide.");
             System.out.println("La référence est vide.");
         }
         
@@ -229,20 +261,17 @@ public class Fonctions implements Runnable{
         }
     }   
     private synchronized void afficherAnnonceParType(String type){
-        try{
-            String message = "ANNONCE;";
-            for(int i = 0;i < annoncesAll.size();i++){                
-                if(annoncesAll.get(i).getDomaine().equals(type.toLowerCase())){
-                    message += annoncesAll.get(i).getDomaine()+"***"+ annoncesAll.get(i).getContenu()+
-                    "***"+annoncesAll.get(i).getRef()+"***"+annoncesAll.get(i).getPrix() + "***"+annoncesAll.get(i).getLogin()+"###";        
-                }
+        
+        String message = "ANNONCE;";
+        for(int i = 0;i < annoncesAll.size();i++){                
+            if(annoncesAll.get(i).getDomaine().equals(type.toLowerCase())){
+                message += annoncesAll.get(i).getDomaine()+"***"+ annoncesAll.get(i).getContenu()+
+                "***"+annoncesAll.get(i).getRef()+"***"+annoncesAll.get(i).getPrix() + "***"+annoncesAll.get(i).getLogin()+"###";        
             }
-            out.println(message);
-            out.flush();
-        }catch(Exception e){
-            System.out.println("Le domaine (ou le type) de recherche est vide.");
         }
-           
+        out.println(message);
+        out.flush();
+     
     }
     private synchronized void envoiLePort(String id_annonce){
         try{
@@ -250,25 +279,26 @@ public class Fonctions implements Runnable{
             int portUDP = 0;
             String ip = "";
             for(int i = 0; i < annoncesAll.size(); i++){
-                if(annoncesAll.get(i).getRef( ) == Integer.parseInt(id_annonce)){
+                if(annoncesAll.get(i).getRef() == Integer.parseInt(id_annonce)){
                     String login = annoncesAll.get(i).getLogin();
-                    for(int j = 0; j < listUsersConnected.size(); j++){
-                        if(listUsersConnected.get(j).getPseudo().equals(login)){
-                        portUDP=listUsersConnected.get(j).getPortUDP();
-                        ip = listUsersConnected.get(j).getIP();
+                    for(int j = 0; j < listUsers.size(); j++){
+                        if(listUsers.get(j).getPseudo().equals(login)){
+                        portUDP=listUsers.get(j).getPortUDP();
+                        ip = listUsers.get(j).getIP();
                         break;
                         }
                     }
                     break;
                 }
             }
-            if(portUDP==0) {
+            if(portUDP == 0) {
                 out.println("FAIL;L'annonce n'existe pas");
             } else {
-                out.println(envoi+portUDP+ip);
+                out.println(envoi+portUDP+";"+ip);
             }
             out.flush();    
         }catch(NullPointerException e){
+            out.println("FAIL;L'ID d'annonce est vide.");
             System.out.println("L'ID d'annonce est vide.");
         }    
     }
@@ -283,5 +313,4 @@ public class Fonctions implements Runnable{
         out.flush();
         return usr;
     }
-   
 }
