@@ -7,9 +7,6 @@ public class Adresse {
 		this.adresse = _adresse;
 		this.portUDP = _portUDP;
 	}
-	public Adresse() {
-		
-	}
 
 	public String getAdresse() {
 		return adresse;

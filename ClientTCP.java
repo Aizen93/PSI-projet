@@ -32,19 +32,12 @@ public class ClientTCP {
 
 	public static void main(String[] args) {
 		String ip = "localhost";
-//		Scanner scanner = new Scanner(System.in);
-//		try {
-//			ip = scanner.nextLine();
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		}
-//		scanner.close();
 		ClientTCP clientTCP = null;
 		try{
 			clientTCP = new ClientTCP(args[0]);
 		} catch (ArrayIndexOutOfBoundsException e) {
 			System.out.println("Veuillez entrer en parametre l'adresse IP du Serveur");
-			System.exit(0);
+			System.exit(1);
 		}
 		if(clientTCP.socket==null)	return;
 		clientTCP.inFromUser = new Scanner(System.in);

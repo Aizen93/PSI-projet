@@ -13,7 +13,6 @@ public class Fonctions implements Runnable{
     private static int ref = 0;      
     private static ArrayList<Users> listUsers = new ArrayList<Users>() ;
     private static ArrayList<Annonce> annoncesAll = new ArrayList<Annonce>();
-    private static int portUDP = 8531;
 
     
     public Fonctions(Socket _socket) {

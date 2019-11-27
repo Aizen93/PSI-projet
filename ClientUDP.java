@@ -79,16 +79,12 @@ public class ClientUDP implements Runnable {
 		return m;
 	}
 
-	//TODO: Tester avec le while, si ca ne fonctionne pas faire avec le for
 	public void readAll() {
 		ArrayDeque<Message> deque = file.clone();
 		Message m;
 		while((m=deque.poll())!=null) {
 			System.out.println("Message de " + m.getPseudo() + " : " + m.getMessage());
 		}
-//		for(Message mess : deque) {
-//			System.out.println("Message de " + mess.getPseudo() + " : " + mess.getMessage());
-//		}
 	}
 	public ArrayDeque<Message> getFile() {
 		return file;
