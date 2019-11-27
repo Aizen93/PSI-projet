@@ -1,12 +1,12 @@
 public class Message {
-	private String pseudo;
 	private int portUDP;
-	private String message;
+	private String pseudo, message, adresseIP;
 	
-	public Message(String pseudo, int portUDP, String message) {
-		this.pseudo = pseudo;
-		this.portUDP = portUDP;
-		this.message = message;
+	public Message(String _pseudo, int _portUDP,  String _adresseIP, String _message) {
+		this.pseudo = _pseudo;
+		this.portUDP = _portUDP;
+		this.message = _message;
+		this.adresseIP = _adresseIP;
 	}
 	
 	public String getPseudo() {
@@ -26,5 +26,13 @@ public class Message {
 	}
 	public void setMessage(String message) {
 		this.message = message;
+	}
+
+	public String getAdresseIP() {
+		return adresseIP;
+	}
+
+	public void setAdresseIP(String adresseIP) {
+		this.adresseIP = adresseIP;
 	}
 }

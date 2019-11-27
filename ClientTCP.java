@@ -1,5 +1,6 @@
 import java.io.*;
 import java.net.*;
+import java.util.InputMismatchException;
 import java.util.Scanner;
 
 public class ClientTCP {
@@ -31,20 +32,27 @@ public class ClientTCP {
 
 	public static void main(String[] args) {
 		String ip = "localhost";
-		Scanner scanner = new Scanner(System.in);
-		try {
-			ip = scanner.nextLine();
-		} catch (Exception e) {
-			e.printStackTrace();
+//		Scanner scanner = new Scanner(System.in);
+//		try {
+//			ip = scanner.nextLine();
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}
+//		scanner.close();
+		ClientTCP clientTCP = null;
+		try{
+			clientTCP = new ClientTCP(args[0]);
+		} catch (ArrayIndexOutOfBoundsException e) {
+			System.out.println("Veuillez entrer en parametre l'adresse IP du Serveur");
+			System.exit(0);
 		}
-		scanner.close();
-		ClientTCP clientTCP = new ClientTCP(ip);
 		if(clientTCP.socket==null)	return;
 		clientTCP.inFromUser = new Scanner(System.in);
 		boolean connected = true;
 		String commande;
 		int portUDP = 0;
 		while(connected) {
+
 			System.out.println("Entrez votre choix : 0 - Quitter l'application, 1 - Connect, 2 - Disconnect, 3 - Add annonce,"
 					+ " 4 - Voir toutes les annonces, 5 - Voir mes annonces,\n 6 - Voir les annonces avec filtre,"
 					+ " 7 - Supprimer une annonce, 8 - Envoyer un message à un utilisateur, 9 - Lire un message, "
@@ -57,10 +65,9 @@ public class ClientTCP {
 			case "1":
 				if(!clientTCP.isConnected) {
 					portUDP = clientTCP.connect();
-					System.out.println("DEBUG - le port UDP récupéré par le serveur est : " + portUDP);
+//					System.out.println("DEBUG - le port UDP récupéré par le serveur est : " + portUDP);
 				}
 				else	System.out.println("Vous etes deja connecte");
-//				clientTCP.createUDP(portUDP);
 				break;
 			case "2":
 				clientTCP.disconnect();
@@ -69,26 +76,26 @@ public class ClientTCP {
 				clientTCP.addAnnonce();
 				break;
 			case "4":
-				clientTCP.allAnnonce("ALLANNS");
+				clientTCP.allAnnonce();
 				break;
 			case "5":
-				clientTCP.allAnnonce("MYYANNS");
+				clientTCP.myAnnonce();
 				break;
 			case "6":
-				clientTCP.allAnnonce("ANNONCE");
+				clientTCP.filterAnnonce();
 				break;
 			case "7":
 				clientTCP.deleteAnnonce();
 				break;
 			case "8":
-				int portUDPSend = clientTCP.sendMessage();
-				System.out.println(portUDPSend);
-				if(portUDP!=-1)	clientTCP.sendUDP(portUDPSend);
+				Adresse adresse = clientTCP.sendMessage();
+//				System.out.println(portUDPSend);
+				if(portUDP!=-1)	clientTCP.sendUDP(adresse);
 				else	System.out.println("L'annonce n'existe pas");
 				break;
 			case "9":
 				Message m = clientTCP.clientUDP.readOne();
-				clientTCP.repondre(m);
+				if(m!=null)	clientTCP.repondre(m);
 				break;
 			case "10":
 				clientTCP.clientUDP.readAll();
@@ -125,15 +132,20 @@ public class ClientTCP {
 			System.err.println("Mauvaise lecture");
 		}
 	}
-
+	
 	public int connect() {
 		System.out.println("Entrez votre pseudo : ");
 		String pseudo = inFromUser.nextLine();
 		System.out.println("Entrez votre mdp");
 		String mdp = inFromUser.nextLine();
+		System.out.println("Entrez votre portUDP (entre 1000 et 9999)");
+		String portSend = inFromUser.nextLine();
+		int portUDP = 0;
+		//TODO: Gérer les mauvais inputs
 		try {
 			// Ecriture et envoi du message
-			String message = "CONNECT;"+pseudo+";"+mdp+";"+socket.getInetAddress().toString().replace("/", "");
+//			System.out.println("DEBUG - Envoi de l@ IP : " + socket.getInetAddress().getHostAddress());
+			String message = "CONNECT;"+pseudo+";"+mdp+";"+portSend+";"+socket.getInetAddress().getHostAddress();
 			printWriter.println(message);
 			printWriter.flush();
 			//Lecture
@@ -142,8 +154,10 @@ public class ClientTCP {
 			if(receptionSplit[0].equals("CONNECT")) {
 				System.out.println("Connection réussi");
 				setPseudoCourant(pseudo);
-				createUDP(Integer.parseInt(receptionSplit[1]));	//Demarre l'ecoute en UDP
+				portUDP = Integer.parseInt(portSend);
+				createUDP(portUDP);	//Demarre l'ecoute en UDP
 				this.isConnected = true;
+				return portUDP;
 			} else if(receptionSplit[0].equals("FAIL")) {
 				System.out.println(receptionSplit[1]);
 				return -1;
@@ -152,8 +166,6 @@ public class ClientTCP {
 				System.out.println("Message Inconnu : " + reception);
 				return -1;
 			}
-			System.out.println(Integer.parseInt(receptionSplit[1]));
-			return Integer.parseInt(receptionSplit[1]);
 		} catch (NullPointerException e) {
 			System.err.println("Vous n'etes plus connecté au serveur");
 			return -1;
@@ -175,7 +187,7 @@ public class ClientTCP {
 			if(reception.equals("OK")) {
 				System.out.println("Déconnection réussi");
 				pseudoCourant = "invite";
-				if(clientUDP!=null)	clientUDP.stop();
+				if(clientUDP!=null)	clientUDP.stop(); //Deconnection du thread d'ecoute et d'envoi UDP
 				isConnected = false;
 			}			
 			return true;
@@ -216,14 +228,9 @@ public class ClientTCP {
 		}
 	}
 
-	public boolean allAnnonce(String annonce) {
-		String message = annonce;
-		if(annonce.equals("ANNONCE")) {
-			System.out.println("Entrez le type : ");
-			String type = inFromUser.nextLine();			
-			message +=";" + type;
-		} 
+	public boolean allAnnonce() {
 		try {
+			String message = "ALLANNS";
 			printWriter.println(message);
 			printWriter.flush();
 			//Lecture
@@ -231,11 +238,51 @@ public class ClientTCP {
 			String[] receptionSplit = reception.split(";");
 			if(receptionSplit[0].equals("FAIL")){
 				System.out.println(receptionSplit[1]);
-			}else if(receptionSplit[0].equals(annonce)){
+			}else if(receptionSplit[0].equals(message)){
 				if(receptionSplit.length == 1 ){
 					System.out.println("Il n'y a pas encore d'annonce");
 				}else if(receptionSplit.length > 1){
 					System.out.println("All announces online :");
+					String[] tmp = receptionSplit[1].split("###");
+					for(int i = 0; i < tmp.length; i++){
+						String [] src = tmp[i].split("\\*\\*\\*");
+						
+						System.out.println("+----------------------------------------------+");
+						System.out.println("| Reference : " + src[2]);
+						System.out.println("| Domain : " + src[0]);
+						System.out.println("| Price: " + src[3]);
+						System.out.println("| Owner: " + src[4]);
+						System.out.println("| Description : " + src[1]);
+						System.out.println("+----------------------------------------------+");
+					}
+				}
+			}else{
+				System.out.println("Reponse inconnu : " + reception);
+			}
+			return true;
+		} catch (NullPointerException e) {
+			System.err.println("Vous n'etes plus connecté au serveur");
+		} finally {
+			return false;
+		}
+		
+	}
+	
+	public boolean myAnnonce() {
+		try {
+			String message = "MYYANNS";
+			printWriter.println(message);
+			printWriter.flush();
+			//Lecture
+			String reception = bufferedReader.readLine();
+			String[] receptionSplit = reception.split(";");
+			if(receptionSplit[0].equals("FAIL")){
+				System.out.println(receptionSplit[1]);
+			}else if(receptionSplit[0].equals(message)){
+				if(receptionSplit.length == 1 ){
+					System.out.println("Vous n'avez pas encore d'annonce");
+				}else if(receptionSplit.length > 1){
+					System.out.println("Vos annonces:");
 					String[] tmp = receptionSplit[1].split("###");
 					for(int i = 0; i < tmp.length; i++){
 						String [] src = tmp[i].split("\\*\\*\\*");
@@ -250,7 +297,7 @@ public class ClientTCP {
 					}
 				}
 			}else{
-				System.out.println("SERVER BAD RESPONSE");
+				System.out.println("Reponse inconnu : " + reception);
 			}
 			return true;
 		} catch (NullPointerException e) {
@@ -259,6 +306,49 @@ public class ClientTCP {
 			return false;
 		}
 
+	}
+	
+	public boolean filterAnnonce() {
+		try {
+			String message = "ANNONCE";
+			System.out.println("Entrez le type : ");
+			String type = inFromUser.nextLine();			
+			message +=";" + type;
+
+			printWriter.println(message);
+			printWriter.flush();
+			//Lecture
+			String reception = bufferedReader.readLine();
+			String[] receptionSplit = reception.split(";");
+			if(receptionSplit[0].equals("FAIL")){
+				System.out.println(receptionSplit[1]);
+			}else if(receptionSplit[0].equals("ANNONCE")){
+				if(receptionSplit.length == 1 ){
+					System.out.println("Il n'y a pas encore d'annonce de ce type");
+				}else if(receptionSplit.length > 1){
+					System.out.println("Les annonces:");
+					String[] tmp = receptionSplit[1].split("###");
+					for(int i = 0; i < tmp.length; i++){
+						String [] src = tmp[i].split("\\*\\*\\*");
+
+						System.out.println("+----------------------------------------------+");
+						System.out.println("| Reference : " + src[2]);
+						System.out.println("| Domain : " + src[0]);
+						System.out.println("| Price: " + src[3]);
+						System.out.println("| Owner: " + src[4]);
+						System.out.println("| Description : " + src[1]);
+						System.out.println("+----------------------------------------------+");
+					}
+				}
+			}else{
+				System.out.println("Reponse inconnu : " + reception);
+			}
+			return true;
+		} catch (NullPointerException e) {
+			System.err.println("Vous n'etes plus connecté au serveur");
+		} finally {
+			return false;
+		}
 	}
 
 	public boolean deleteAnnonce() {
@@ -285,12 +375,13 @@ public class ClientTCP {
 	}
 
 	//TODO: A modifier si on recoit @IP + portUDP : Renvoyer un DatahramSocket ? ou un couple (IP+port)
-	public int sendMessage() {
+	public Adresse sendMessage() {
 		System.out.println("Entrez la ref de l'annonce de l'utilisateur à contacter : ");
 		String ref = inFromUser.nextLine();
 		try {
+			Adresse adresse = null;
+			String adresseIP;
 			int portUDP = -1;
-			String adresseUDP;
 			String message = "MESSAGE;"+ref;
 			printWriter.println(message);
 			printWriter.flush();
@@ -299,28 +390,30 @@ public class ClientTCP {
 			String[] receptionSplit = reception.split(";");
 			if(receptionSplit[0].equals("MESSAGE")) {
 				portUDP = Integer.parseInt(receptionSplit[1]);
-				adresseUDP = receptionSplit[2];
+				adresseIP = receptionSplit[2];
+				adresse = new Adresse(adresseIP, portUDP);
 //				System.out.println("DEBUG - Port UDP récupéré : " + receptionSplit[1]);
 			} else if(receptionSplit[0].equals("FAIL")){
 				System.out.println(receptionSplit[1]);
 			}
 //			System.out.println("DEBUG - portUDP dans sendMessage() : " + portUDP);
-			return portUDP;
+			return adresse;
 		} catch (NullPointerException e) {
 			System.err.println("Vous n'etes plus connecté au serveur");
-			return -1;
+			return null;
 		} catch (IOException e) {
 			System.out.println("Erreur de readline");
-			return -1;
+			return null;
 		}
 	}
 	
-	public void sendUDP(int portUDP) {
+	public void sendUDP(Adresse adresse) {
 		try {
 			System.out.println("Entrez votre message :");
 			String msg = inFromUser.nextLine();
-			String msgSend = "WRITETO;"+pseudoCourant+";"+clientUDP.getPortUDP()+";"+msg;
-			clientUDP.sendTo(portUDP, msgSend);
+			String msgSend = "WRITETO;"+pseudoCourant+";"+clientUDP.getPortUDP()+";"
+					+ this.socket.getInetAddress().getHostAddress()+";"+msg;
+			clientUDP.sendTo(adresse, msgSend);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -340,7 +433,7 @@ public class ClientTCP {
 		try {
 			String reponse = inFromUser.nextLine();
 			if(reponse.toLowerCase().equals("oui")) {
-				sendUDP(m.getPortUDP());
+				sendUDP(new Adresse(m.getAdresseIP(), m.getPortUDP()));
 			}
 		} catch (Exception e) {
 			e.printStackTrace();

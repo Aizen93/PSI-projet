@@ -46,7 +46,7 @@ public class ClientUDP implements Runnable {
 				String msg = new String(buffer, 0, packet.getLength());
 //				System.out.println("DEBUG - " + msg);
 				String[] message = msg.split(";");
-				file.add(new Message(message[1], Integer.parseInt(message[2]), message[3]));
+				file.add(new Message(message[1], Integer.parseInt(message[2]), message[3],message[4]));
 							} 
 			catch (IOException e) {
 				break;
@@ -54,10 +54,10 @@ public class ClientUDP implements Runnable {
 		}
 	}
 
-	public void sendTo(int portUDP, /*InetSocketAddress address,*/ String msg) throws IOException {
+	public void sendTo(Adresse adresse, String msg) throws IOException {
 		byte[] buffer = msg.getBytes();
-//		InetSocketAddress address = new InetSocketAddress(portUDP);
-		InetSocketAddress address = new InetSocketAddress("127.0.0.1", portUDP);
+		InetSocketAddress address = new InetSocketAddress(adresse.getAdresse(), adresse.getPortUDP());
+//		System.out.println("DEBUG - Adresse dans sendTO : " + address.getHostName());
 
 		DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
 		packet.setSocketAddress(address);

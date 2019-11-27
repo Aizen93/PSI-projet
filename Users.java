@@ -28,7 +28,13 @@ public class Users {
     public int getPortUDP(){
         return this.portUDP;
     }
+    public void setPortUDP(int portUDP) {
+    	this.portUDP = portUDP;
+    }
     public String getIP(){
         return this.ip;
+    }
+    public void setIP(String ip) {
+    	this.ip = ip;
     }
 }
