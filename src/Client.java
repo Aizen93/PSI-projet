@@ -65,7 +65,7 @@ class Client {
 
     public void communication() throws NumberFormatException, SocketException {
         while(!exit) {
-            System.out.print(Color.BLUE_BRIGHT + "> Enter a command: " + Color.ANSI_RESET);
+            Affichage.display_command_request();
             command = sc.nextLine();
             switch (command) {
                 case "DISCONN":
@@ -99,9 +99,9 @@ class Client {
                 	message();
                 	break;
                 default:
-                    System.out.println(Color.RED_BRIGHT + "Wrong command !" + Color.ANSI_RESET);
+                    Affichage.display_error("Wrong command !");
             }
-            if(!mode_disconnected) System.out.println(Color.CYAN_BRIGHT + "You have "+ client_udp.sizeMessage()+" new unseen message(s)" + Color.ANSI_RESET);
+            if(!mode_disconnected) Affichage.display_message_notification(client_udp.sizeMessage());
         }
     }
     
@@ -115,7 +115,7 @@ class Client {
             //if les bon result
             if(tab.length == 2 && tab[0].equals("FAIL")) {
                 //System.out.println(Color.RED_BRIGHT + "Sorry no annouce found with ref = "+ announce_ref + Color.ANSI_RESET);
-                System.out.println(Color.RED_BRIGHT + tab[1] + announce_ref + Color.ANSI_RESET);
+                Affichage.display_error(tab[1] + announce_ref);
             }else {
                 if(tab[0].equals("MESSAGE") && tab.length == 3) {
                     address = new InetSocketAddress(tab[2], Integer.parseInt(tab[1]));
@@ -124,7 +124,7 @@ class Client {
 
                     client_udp.sendTo(address, message_to_send);
                 }else {
-                    System.out.println(Color.RED_BRIGHT + "Error Server bad response !" + Color.ANSI_RESET);
+                    Affichage.display_error("Error Server bad response !");
                 }
             } 
         }catch(Exception e){
@@ -140,12 +140,9 @@ class Client {
                 if(message_received.equals("OK")) {
                     mode_disconnected = true;
                     client_udp.stop();
-                    System.out.println(Color.GREEN_BRIGHT + "################" + Color.ANSI_RESET);
-                    System.out.println(Color.GREEN_BRIGHT + "# Disconnected #" + Color.ANSI_RESET);
-                    System.out.println(Color.GREEN_BRIGHT + "################" + Color.ANSI_RESET);
-                    System.out.println(Color.YELLOW_BRIGHT + "Now, you can only request public annouces but can't interact with anything else !" + Color.ANSI_RESET);  
+                    Affichage.display_disconnected();
                 } else {
-                    System.out.println(Color.RED_BRIGHT + "Sorry, couldn't disconnect" + Color.ANSI_RESET);
+                    Affichage.display_error("Sorry, couldn't disconnect");
                     System.exit(1);
                 }
             }else{
@@ -166,7 +163,7 @@ class Client {
                 close();
                 System.exit(1);
             }else{
-                System.out.println(Color.RED_BRIGHT + "BAD SERVER RESPONSE, destroying everything... BYE" + Color.ANSI_RESET);
+                Affichage.display_error("BAD SERVER RESPONSE, destroying everything... BYE");
                 close();
                 System.exit(1);
             }
@@ -187,12 +184,13 @@ class Client {
                 password = new String(console.readPassword(">> Password: "));
                 current_user_udp_port = getFreePort();
                 if(current_user_udp_port == -1){
-                    System.out.println(Color.RED_BOLD_BRIGHT + "Sorry there is no free port available... Try again later !" + Color.ANSI_RESET);
+                    Affichage.display_error("Sorry there is no free port available... Try again later !");
                     System.exit(1);
                 }
                 current_user_IP = so.getLocalAddress().getHostAddress();
                 message_to_send = "CONNECT;" + username + ";" + password + ";" + current_user_udp_port + ";" + current_user_IP;
                 send(message_to_send);
+                System.out.println(message_received);
                 read();
                 String[]tab = message_received.split(";");
                 if(tab[0].equals("CONNECT") && tab.length == 1){
@@ -201,15 +199,13 @@ class Client {
                     client_udp = new ClientUDP();
                     client_udp.bind(current_user_udp_port);
                     client_udp.start();
-                    System.out.println(Color.GREEN_BRIGHT + "############################" + Color.ANSI_RESET);
-                    System.out.println(Color.GREEN_BRIGHT + "# Connection successfull ! #" + Color.ANSI_RESET);
-                    System.out.println(Color.GREEN_BRIGHT + "############################" + Color.ANSI_RESET);
+                    Affichage.display_connected();
                 }else if(tab[0].equals("FAIL") && tab.length == 2){
                     current_user_udp_port = 0;
                     System.out.println(Color.YELLOW_BRIGHT + tab[1] + Color.ANSI_RESET);
                 }else{
                     current_user_udp_port = 0;
-                    System.out.println(Color.RED_BRIGHT + "SERVER BAD RESPONSE" + Color.ANSI_RESET);
+                    Affichage.display_error("Server bad response !");
                 }
             }else{
                 System.out.println(Color.YELLOW_BRIGHT + "You are alrady logged in, nothing to be done" + Color.ANSI_RESET);
@@ -222,7 +218,7 @@ class Client {
     private void announcesHandler(String command){
         try{
             if(command.equals("MYYANNS") && mode_disconnected){
-                System.out.println(Color.RED_BRIGHT + "You are disconnected you can't see personnal annouces !" + Color.ANSI_RESET);
+                Affichage.display_error("You are disconnected you can't see personnal annouces !");
             }else{
                 message_to_send = command;
                 if(command.equals("ANNONCE")){
@@ -235,7 +231,7 @@ class Client {
                 String[] res = message_received.split(";");
 
                 if(res.length == 2 && res[0].equals("FAIL")){
-                    System.out.println(Color.RED_BRIGHT + "Error : " + res[1] + Color.ANSI_RESET);
+                    Affichage.display_error("Error : " + res[1]);
                 }else if(res[0].equals(command)){
                     if(res.length == 1 ){
                         System.out.println(Color.YELLOW_BRIGHT + "Nothing published yet, use ADDANNS to be the first to publish an annouce" + Color.ANSI_RESET);
@@ -244,19 +240,12 @@ class Client {
                         String[] tmp = res[1].split("###");
                         for(int i = 0; i < tmp.length; i++){
                             String [] src = tmp[i].split("\\*\\*\\*");
-
-                            System.out.println("+----------------------------------------------+");
-                            System.out.println("|" + Color.GREEN_BOLD_BRIGHT + " Reference : " + Color.ANSI_RESET + src[2]);
-                            System.out.println("| Domain : " + src[0]);
-                            System.out.println("| Price: " + src[3]);
-                            System.out.println("| Owner: " + src[4]);
-                            System.out.println("| Description : " + src[1]);
-                            System.out.println("+----------------------------------------------+");
+                            Affichage.display_annonce(src[2], src[0], src[3], src[4], src[1]);
                         }
                     }
                 }else{
-                    if(res[0].equals("FAIL") && res.length == 2) System.out.println(Color.RED_BRIGHT + res[1] + Color.ANSI_RESET);
-                    else System.out.println(Color.RED_BRIGHT + "SERVER BAD RESPONSE" + Color.ANSI_RESET);
+                    if(res[0].equals("FAIL") && res.length == 2) Affichage.display_error(res[1]);
+                    else Affichage.display_error("SERVER BAD RESPONSE");
                 }
             }
         }catch(Exception e){
@@ -285,13 +274,13 @@ class Client {
                 message_to_send = "ADDANNS;" + domain + ";" + price + ";" + description;
                 send(message_to_send);
                 read();
-                //System.out.println("DEBUG --- "+message_received);
-                if(message_received.equals("OK")){
+                String[] tab = message_received.split(";");
+                if(tab[0].equals("OK") && tab.length == 1){
                     System.out.println(Color.GREEN_BRIGHT + "Announce added succefully !" + Color.ANSI_RESET);
-                }else if(message_received.equals("FAIL")){
-                    System.out.println(Color.RED_BRIGHT + "Failed adding the announce !" + Color.ANSI_RESET);
+                }else if(tab[0].equals("FAIL") && tab.length == 2){
+                    Affichage.display_error(tab[1]);
                 }else{
-                    System.out.println(Color.RED_BRIGHT + "SERVER BAD RESPONSE" + Color.ANSI_RESET);
+                    Affichage.display_error("Server bad response !");
                 }
             }else{
                 System.out.println(Color.YELLOW_BRIGHT + "You are not logged in to add an announce" + Color.ANSI_RESET);
@@ -312,9 +301,9 @@ class Client {
                 if(message_received.equals("OK")){
                     System.out.println(Color.GREEN_BRIGHT + "Announce deleted succesfully !" + Color.ANSI_RESET);
                 }else if(message_to_send.equals("FAIL")){
-                    System.out.println(Color.RED_BRIGHT + "Failed deleting the announce" + Color.ANSI_RESET);
+                    Affichage.display_error("Failed deleting the announce");
                 }else{
-                    System.out.println(Color.RED_BRIGHT + "SERVER BAD RESPONSE" + Color.ANSI_RESET);
+                    Affichage.display_error("Sserver bad response !");
                 }  
             }else{
                 System.out.println(Color.YELLOW_BRIGHT + "You are not logged in to delete an announce" + Color.ANSI_RESET);
@@ -381,15 +370,6 @@ class Client {
     private void send(String message) {
         pw.println(message);
         pw.flush();
-    }
-    
-    public void printCommands(){
-        System.out.println("+-----------------------------------------------+");
-        System.out.println("| You can use the following commands :");
-        System.out.println("| - CONNECT : to log in");
-        System.out.println("| - DISCONN : to disconnect (offline mode");
-        System.out.println("| - ADDANNS : to add an anounce");
-        System.out.println("| - ALLANNS : to see all anounces");
     }
     
     /**
