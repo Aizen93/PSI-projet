@@ -339,8 +339,13 @@ class Client {
                 System.exit(1);
             }
             System.out.println("Attributed port : "+ Color.GREEN_BOLD_BRIGHT + current_user_udp_port + Color.ANSI_RESET + " !");
-            System.out.print(">> Please enter the server's IP address : ");
-            serverIP = sc.nextLine();
+            
+            serverIP = "";
+            while(!isIPAddress(serverIP)){
+                System.out.print(">> Please enter a valid server's IP address : ");
+                serverIP = sc.nextLine();
+            }
+            
             
             so = new Socket(serverIP, serverTCPPort);
         }catch (UnknownHostException e) {
@@ -413,7 +418,6 @@ class Client {
                 "([01]?\\d\\d?|2[0-4]\\d|25[0-5])$");
         Matcher match = p.matcher(ip);
         if (!match.matches()) {
-            System.out.println("Incorrect IP address format");
             return false;
         }
         return true;
