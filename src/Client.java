@@ -56,7 +56,7 @@ class Client {
         try {
             message_received = br.readLine();
         }catch (IOException e) {
-            System.out.println(Color.RED_BACKGROUND_BRIGHT + "Echec read" + Color.ANSI_RESET);
+            System.out.println(Affichage.RED_BACKGROUND_BRIGHT + "Echec read" + Affichage.ANSI_RESET);
         }
         String []tab = message_received.split("&");
         for(String s : tab) System.out.println(s);
@@ -92,12 +92,15 @@ class Client {
                 case "READ":
                     client_udp.read(username, current_user_udp_port, current_user_IP, sc);
                     break;
+                case "READALL" :
+                    client_udp.readAll();
+                    break;
                 case "QUIT":
                     quitApply();
                     break;
                 case "MESSAGE":
-                	message();
-                	break;
+                    message();
+                    break;
                 default:
                     Affichage.display_error("Wrong command !");
             }
@@ -114,7 +117,7 @@ class Client {
             String []tab = message_received.split(";");
             //if les bon result
             if(tab.length == 2 && tab[0].equals("FAIL")) {
-                //System.out.println(Color.RED_BRIGHT + "Sorry no annouce found with ref = "+ announce_ref + Color.ANSI_RESET);
+                //System.out.println(Affichage.RED_BRIGHT + "Sorry no annouce found with ref = "+ announce_ref + Affichage.ANSI_RESET);
                 Affichage.display_error(tab[1] + announce_ref);
             }else {
                 if(tab[0].equals("MESSAGE") && tab.length == 3) {
@@ -128,7 +131,7 @@ class Client {
                 }
             } 
         }catch(Exception e){
-            System.out.println(Color.RED_BACKGROUND_BRIGHT + "ERROR EXCEPTION : something went really wrong" + Color.ANSI_RESET);
+            System.out.println(Affichage.RED_BACKGROUND_BRIGHT + "ERROR EXCEPTION : something went really wrong" + Affichage.ANSI_RESET);
         }
     }
     
@@ -146,10 +149,10 @@ class Client {
                     System.exit(1);
                 }
             }else{
-                System.out.println(Color.YELLOW_BRIGHT + "You are not logged in to disconnect" + Color.ANSI_RESET);
+                System.out.println(Affichage.YELLOW_BRIGHT + "You are not logged in to disconnect" + Affichage.ANSI_RESET);
             }
         }catch(Exception e){
-            System.out.println(Color.RED_BACKGROUND_BRIGHT + "ERROR EXCEPTION : something went really wrong" + Color.ANSI_RESET);
+            System.out.println(Affichage.RED_BACKGROUND_BRIGHT + "ERROR EXCEPTION : something went really wrong" + Affichage.ANSI_RESET);
         }
     }
     
@@ -159,7 +162,7 @@ class Client {
             send(message_to_send);
             read();
             if(message_received.equals("OK")){
-                System.out.println(Color.YELLOW_BRIGHT + "Server connexion destroyed.... see you soon... BYE !" + Color.ANSI_RESET);
+                System.out.println(Affichage.YELLOW_BRIGHT + "Server connexion destroyed.... see you soon... BYE !" + Affichage.ANSI_RESET);
                 close();
                 System.exit(1);
             }else{
@@ -168,7 +171,7 @@ class Client {
                 System.exit(1);
             }
         }catch(Exception e){
-            System.out.println(Color.RED_BACKGROUND_BRIGHT + "ERROR EXCEPTION : something went really wrong" + Color.ANSI_RESET);
+            System.out.println(Affichage.RED_BACKGROUND_BRIGHT + "ERROR EXCEPTION : something went really wrong" + Affichage.ANSI_RESET);
         }
     }
     
@@ -190,28 +193,28 @@ class Client {
                 current_user_IP = so.getLocalAddress().getHostAddress();
                 message_to_send = "CONNECT;" + username + ";" + password + ";" + current_user_udp_port + ";" + current_user_IP;
                 send(message_to_send);
-                System.out.println(message_received);
+                
                 read();
                 String[]tab = message_received.split(";");
                 if(tab[0].equals("CONNECT") && tab.length == 1){
                     mode_disconnected = false;
-                    System.out.println("Attributed port : "+ Color.GREEN_BOLD_BRIGHT + current_user_udp_port + Color.ANSI_RESET + " !");
+                    System.out.println("Attributed port : "+ Affichage.GREEN_BOLD_BRIGHT + current_user_udp_port + Affichage.ANSI_RESET + " !");
                     client_udp = new ClientUDP();
                     client_udp.bind(current_user_udp_port);
                     client_udp.start();
                     Affichage.display_connected();
                 }else if(tab[0].equals("FAIL") && tab.length == 2){
                     current_user_udp_port = 0;
-                    System.out.println(Color.YELLOW_BRIGHT + tab[1] + Color.ANSI_RESET);
+                    System.out.println(Affichage.YELLOW_BRIGHT + tab[1] + Affichage.ANSI_RESET);
                 }else{
                     current_user_udp_port = 0;
                     Affichage.display_error("Server bad response !");
                 }
             }else{
-                System.out.println(Color.YELLOW_BRIGHT + "You are alrady logged in, nothing to be done" + Color.ANSI_RESET);
+                System.out.println(Affichage.YELLOW_BRIGHT + "You are alrady logged in, nothing to be done" + Affichage.ANSI_RESET);
             }
         }catch(Exception e){
-            System.out.println(Color.RED_BACKGROUND_BRIGHT + "ERROR EXCEPTION : something went really wrong" + Color.ANSI_RESET);
+            System.out.println(Affichage.RED_BACKGROUND_BRIGHT + "ERROR EXCEPTION : something went really wrong" + Affichage.ANSI_RESET);
         }
     }
     
@@ -234,7 +237,7 @@ class Client {
                     Affichage.display_error("Error : " + res[1]);
                 }else if(res[0].equals(command)){
                     if(res.length == 1 ){
-                        System.out.println(Color.YELLOW_BRIGHT + "Nothing published yet, use ADDANNS to be the first to publish an annouce" + Color.ANSI_RESET);
+                        System.out.println(Affichage.YELLOW_BRIGHT + "Nothing published yet, use ADDANNS to be the first to publish an annouce" + Affichage.ANSI_RESET);
                     }else if(res.length > 1){
                         System.out.println("All announces online :");
                         String[] tmp = res[1].split("###");
@@ -249,7 +252,7 @@ class Client {
                 }
             }
         }catch(Exception e){
-            System.out.println(Color.RED_BACKGROUND_BRIGHT + "ERROR EXCEPTION : something went really wrong" + Color.ANSI_RESET);
+            System.out.println(Affichage.RED_BACKGROUND_BRIGHT + "ERROR EXCEPTION : something went really wrong" + Affichage.ANSI_RESET);
         }
     }
     
@@ -276,17 +279,17 @@ class Client {
                 read();
                 String[] tab = message_received.split(";");
                 if(tab[0].equals("OK") && tab.length == 1){
-                    System.out.println(Color.GREEN_BRIGHT + "Announce added succefully !" + Color.ANSI_RESET);
+                    System.out.println(Affichage.GREEN_BRIGHT + "Announce added succefully !" + Affichage.ANSI_RESET);
                 }else if(tab[0].equals("FAIL") && tab.length == 2){
                     Affichage.display_error(tab[1]);
                 }else{
                     Affichage.display_error("Server bad response !");
                 }
             }else{
-                System.out.println(Color.YELLOW_BRIGHT + "You are not logged in to add an announce" + Color.ANSI_RESET);
+                System.out.println(Affichage.YELLOW_BRIGHT + "You are not logged in to add an announce" + Affichage.ANSI_RESET);
             }
         }catch(Exception e){
-            System.out.println(Color.RED_BACKGROUND_BRIGHT + "ERROR EXCEPTION : something went really wrong" + Color.ANSI_RESET);
+            System.out.println(Affichage.RED_BACKGROUND_BRIGHT + "ERROR EXCEPTION : something went really wrong" + Affichage.ANSI_RESET);
         }
     }
     
@@ -298,18 +301,19 @@ class Client {
                 message_to_send += sc.nextLine();
                 send(message_to_send);
                 read();
-                if(message_received.equals("OK")){
-                    System.out.println(Color.GREEN_BRIGHT + "Announce deleted succesfully !" + Color.ANSI_RESET);
-                }else if(message_to_send.equals("FAIL")){
+                String[] tab = message_received.split(";");
+                if(tab[0].equals("OK") && tab.length == 1){
+                    System.out.println(Affichage.GREEN_BRIGHT + "Announce deleted succesfully !" + Affichage.ANSI_RESET);
+                }else if(tab[0].equals("FAIL") && tab.length == 2){
                     Affichage.display_error("Failed deleting the announce");
                 }else{
-                    Affichage.display_error("Sserver bad response !");
+                    Affichage.display_error("Server bad response !");
                 }  
             }else{
-                System.out.println(Color.YELLOW_BRIGHT + "You are not logged in to delete an announce" + Color.ANSI_RESET);
+                System.out.println(Affichage.YELLOW_BRIGHT + "You are not logged in to delete an announce" + Affichage.ANSI_RESET);
             }
         }catch(Exception e){
-            System.out.println(Color.RED_BACKGROUND_BRIGHT + "ERROR EXCEPTION : something went really wrong" + Color.ANSI_RESET);
+            System.out.println(Affichage.RED_BACKGROUND_BRIGHT + "ERROR EXCEPTION : something went really wrong" + Affichage.ANSI_RESET);
         }
     }
     
@@ -319,12 +323,12 @@ class Client {
         try {
             br.close();
         }catch (IOException e) {
-            System.out.println(Color.RED_BACKGROUND_BRIGHT + "Echec br.close()" + Color.ANSI_RESET);
+            System.out.println(Affichage.RED_BACKGROUND_BRIGHT + "Echec br.close()" + Affichage.ANSI_RESET);
         }
         try {
             so.close();
         }catch (IOException e) {
-            System.out.println(Color.RED_BACKGROUND_BRIGHT + "Echec so.close()" + Color.ANSI_RESET);
+            System.out.println(Affichage.RED_BACKGROUND_BRIGHT + "Echec so.close()" + Affichage.ANSI_RESET);
         }
     }
 
@@ -340,9 +344,9 @@ class Client {
             
             so = new Socket(serverIP, serverTCPPort);
         }catch (UnknownHostException e) {
-            System.out.println(Color.RED_BACKGROUND_BRIGHT + "Error host" + Color.ANSI_RESET);
+            System.out.println(Affichage.RED_BACKGROUND_BRIGHT + "Error host" + Affichage.ANSI_RESET);
         }catch (IOException e) {
-            System.out.println(Color.RED_BACKGROUND_BRIGHT + "Echec connexion au serveur" + Color.ANSI_RESET);
+            System.out.println(Affichage.RED_BACKGROUND_BRIGHT + "Echec connexion au serveur" + Affichage.ANSI_RESET);
         }
     }
 
@@ -350,12 +354,12 @@ class Client {
         try {
             br = new BufferedReader(new InputStreamReader(so.getInputStream()));
         } catch (IOException | NullPointerException e) {
-            System.out.println(Color.RED_BACKGROUND_BRIGHT + "Echec création BufferedReader" + Color.ANSI_RESET);
+            System.out.println(Affichage.RED_BACKGROUND_BRIGHT + "Echec création BufferedReader" + Affichage.ANSI_RESET);
         }
         try {
             pw = new PrintWriter(new OutputStreamWriter(so.getOutputStream()));
         } catch (IOException e) {
-            System.out.println(Color.RED_BACKGROUND_BRIGHT + "Echec création PrintWriter" + Color.ANSI_RESET);
+            System.out.println(Affichage.RED_BACKGROUND_BRIGHT + "Echec création PrintWriter" + Affichage.ANSI_RESET);
         }
     }
 
@@ -363,7 +367,7 @@ class Client {
         try {
             message_received = br.readLine();
         }catch (IOException e) {
-            System.out.println(Color.RED_BACKGROUND_BRIGHT + "Echec du readLine" + Color.ANSI_RESET);
+            System.out.println(Affichage.RED_BACKGROUND_BRIGHT + "Echec du readLine" + Affichage.ANSI_RESET);
         }
     }
 
@@ -407,8 +411,8 @@ class Client {
 
     public static void main(String[] args) throws NumberFormatException, SocketException, UnknownHostException {
         Client client = new Client();
-        System.out.println(Color.YELLOW_BRIGHT + "####### Welcome to M2 PSI project #######" + Color.ANSI_RESET);
-        //System.out.println(Color.isMac() + " - " + Color.isWindows() + " - " +Color.isUnix());
+        System.out.println(Affichage.YELLOW_BRIGHT + "####### Welcome to M2 PSI project #######" + Affichage.ANSI_RESET);
+        //System.out.println(Affichage.isMac() + " - " + Affichage.isWindows() + " - " +Affichage.isUnix());
         client.communication();
     }
 }

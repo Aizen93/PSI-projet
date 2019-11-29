@@ -46,7 +46,6 @@ public class ClientUDP  implements Runnable {
                 String msg = new String(buffer, 0, packet.getLength());
                 String []tab = msg.split(";");
                 if(tab.length == 5 && tab[0].equals("WRITETO")) {
-                    System.out.println("Ip receive : "+tab[3]);
                     messages.add(new Message(tab[1], Integer.parseInt(tab[2]), tab[3], tab[4]));
                 }
             } 
@@ -68,6 +67,14 @@ public class ClientUDP  implements Runnable {
             System.out.println("Error sending message to "+ address);
         }
     }
+    
+    public synchronized void readAll(){
+        if(messages.size() > 0){
+            for(int i = 0; i < messages.size(); i++){
+                messages.get(i).afficher();
+            }
+        }
+    }
 
     public synchronized void  read(String pseudo, int port, String IP, Scanner sc) {
         if(messages.size() > 0){
@@ -81,7 +88,6 @@ public class ClientUDP  implements Runnable {
                 System.out.print(">> Would you like to answer ? (y/n): ");
                 answer = sc.nextLine();
                 if(answer.equals("y") || answer.equals("Y") || answer.equals("yes") || answer.equals("YES")){
-                    System.out.println("Ip = "+mess.getIP()+", port udp = "+mess.getPortUDP());
                     InetSocketAddress address = new InetSocketAddress(mess.getIP(), mess.getPortUDP());
                     System.out.print(">> Message : ");
                     answer = "WRITETO;"+ pseudo + ";" + port + ";" + IP + ";" + sc.nextLine();

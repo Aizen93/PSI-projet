@@ -19,7 +19,7 @@ public class Message {
     }
     	
     public void afficher() {
-        System.out.println(">> ["+ dtf.format(now) +"]["+ Color.GREEN_BRIGHT + pseudo + Color.ANSI_RESET + "] : " + message);
+        System.out.println(">> ["+ dtf.format(now) +"]["+ Affichage.GREEN_BRIGHT + pseudo + Affichage.ANSI_RESET + "] : " + message);
     }
     
     public String getPseudo() {
