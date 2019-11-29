@@ -7,20 +7,15 @@ import java.net.*;
 import java.util.ArrayList;
 
 public class Server {
-	
-	private ServerSocket serv;
-	private static int nb_connecte = 0;
+
 	private static int refs = 0;
-	private static int port_udp = 2000;
 	private ArrayList<User> users;
 	private ArrayList<Annonce> annonces;
 
 	
 	public Server(ServerSocket s) throws UnknownHostException {
-		System.out.println(Color.GREEN_BOLD_BRIGHT + "--------------Server is now running -----------------------" + Color.ANSI_RESET);
-                InetAddress ip = InetAddress.getLocalHost();
-                System.out.println(Color.GREEN_BOLD_BRIGHT +"----------------- IP : " + s.getInetAddress().getLocalHost().getHostAddress()+" -----------------------" + Color.ANSI_RESET);
-		this.serv = s;
+		Affichage.display_load_server(s.getInetAddress().getLocalHost().getHostAddress());
+		ServerSocket serv = s;
 		users = new ArrayList<User>();
 		annonces = new ArrayList<Annonce>();
 		try{      
@@ -32,7 +27,7 @@ public class Server {
 			}	
 		}
 		catch (Exception e) {
-			System.out.println(Color.RED_BRIGHT + "Error - Connection to thread failed" + Color.ANSI_RESET);
+			Affichage.display_error("Error - Connection to thread failed");
 		}
 
 	}
@@ -52,29 +47,6 @@ public class Server {
 	public void addAnnonce(Annonce annonce) {
 		this.annonces.add(annonce);
 	}
-	
-	public static void main(String[] args) {
-		try{
-			ServerSocket s = new ServerSocket (1027);
-			new Server(s);
-		}
-		catch (Exception e) {
-			System.out.println("Error - Connection to server failed");
-		}
-
-	}
-
-	public static int getNb_connecte() {
-		return nb_connecte;
-	}
-
-	public static void increment_connecte() {
-		Server.nb_connecte ++;
-	}
-	
-	public static void decrement_connecte() {
-		Server.nb_connecte --;
-	}	
 
 	public static int getRefs() {
 		return refs;
@@ -86,6 +58,17 @@ public class Server {
 
 	public void delete_annonce(Annonce a) {
 		annonces.remove(a);
+	}
+	
+	public static void main(String[] args) {
+		try{
+			ServerSocket s = new ServerSocket (1027);
+			new Server(s);
+		}
+		catch (Exception e) {
+			Affichage.display_error("Error - Connection to server failed");
+		}
+
 	}
 	
 	public class ServerThread implements Runnable{
@@ -100,7 +83,7 @@ public class Server {
 			this.so = s;
 			buffered();
 			this.user = null;
-			System.out.println(Color.YELLOW_BRIGHT + "--------------New guest -----------------------" + Color.ANSI_RESET);
+			Affichage.display_client_connect(-1,null, null);
 		}
 		
 		
@@ -108,41 +91,34 @@ public class Server {
 	        try {
 				br=new BufferedReader(new InputStreamReader(so.getInputStream()));
 			} catch (IOException e) {
-				System.out.println("Echec création BufferedReader");
+	        	Affichage.display_error("Echec création BufferedReader");
 			}
 	        try {
 				pw=new PrintWriter(new OutputStreamWriter(so.getOutputStream()));
 			} catch (IOException e) {
-				System.out.println("Echec création PrintWriter");
+	        	Affichage.display_error("Echec création PrintWriter");
 			}
 		}
 		
 		private void read() {
 			try {
 				mess = br.readLine();
-		        System.out.println("-------------------------------------------");
-		        System.out.println("----> Message receive : "+mess);
-		        System.out.println("-------------------------------------------");
+				Affichage.display_read_server(mess);
 			} catch (IOException e) {
-				System.out.println("Echec du readLine");
+				Affichage.display_error("Echec du readLine");
 			}
 		}
 		
 		private void send() {
 	        pw.println(send);
-	        System.out.println("-------------------------------------------");
-	        System.out.println("----> Message send : "+send);
-	        System.out.println("-------------------------------------------");
+			Affichage.display_send_server(send);
 	        pw.flush();
 		}
 		
 		private synchronized int add_user(String pseudo, String mdp, int port, String ip) {
-	        System.out.println("-------------------------------------------");
-			System.out.println("            ----> New User created");
-			System.out.println("                       pseudo : "+pseudo+", mdp : "+mdp);
-	        System.out.println("-------------------------------------------");
+	        Affichage.display_client_connect(0, pseudo, mdp);
 			user = new User(pseudo, mdp, port, ip);
-			addUser(user);;
+			addUser(user);
 			return user.getPortUDP();
 		}
 		
@@ -150,15 +126,15 @@ public class Server {
 			for(User u : getUsers()) {
 				if( pseudo.equals(u.getPseudo()) ) {
 					if (mdp.equals(u.getMdp())) {
-						user = u;
-						user.setConnect(true);
-				        System.out.println("-------------------------------------------");
-						System.out.println("            ----> User connected");
-						System.out.println("                       pseudo : "+pseudo+", mdp : "+mdp);
-				        System.out.println("-------------------------------------------");
-                                                u.setIp(ip_address);
-                                                u.setPort_udp(port_udp);
-						return u.getPortUDP();
+						if(!u.isConnect()) {
+							user = u;
+							user.setConnect(true);
+							Affichage.display_client_connect(1,pseudo, mdp);
+							u.setIp(ip_address);
+							u.setPort_udp(port_udp);
+							return u.getPortUDP();
+						}
+						return -1;
 					}else {
 						return 0;
 					}
@@ -172,9 +148,10 @@ public class Server {
 			if(user == null)  return false;
 			else {
 				if(tab.length == 4) {
-						addAnnonce(new Annonce(Server.getRefs(), user.getPseudo(), Integer.parseInt(tab[2]), tab[1], tab[3]));
-						Server.increment_refs();
-						return true;	
+					if(!isNumeric(tab[2])) return false;
+					addAnnonce(new Annonce(Server.getRefs(), user.getPseudo(), Integer.parseInt(tab[2]), tab[1].toLowerCase(), tab[3]));
+					Server.increment_refs();
+					return true;
 				}
 				else return false;
 			}
@@ -182,13 +159,16 @@ public class Server {
 
 		private void connect(String[] tab) {
 			if(tab.length == 5) {
-				int port = connection(tab[1], tab[2],Integer.parseInt(tab[3]),tab[4]);
+				int port = -2;
+				if(isNumeric(tab[3])) port = connection(tab[1], tab[2],Integer.parseInt(tab[3]),tab[4]);
 				if(port>0) {
-					send = "CONNECT;" + port;
-				}
+					send = "CONNECT";
+				}else if(port == -1) send = "FAIL;Already Connected";
+				else if(port == -2) send = "FAIL;Port not numeric";
 				else send = "FAIL;Wrong password"; 
 			}
-			else	send = "FAIL;Too many parameters"; 
+			else if(tab.length > 5)	send = "FAIL;Too many parameters";
+			else if(tab.length < 5)	send = "FAIL;Not enough parameters";
 			send();
 		}
 		
@@ -199,6 +179,7 @@ public class Server {
 				send="OK";
 			}
 			else 	send = "FAIL;You are already not loged in";
+
 			send();
 		}
 		
@@ -233,25 +214,14 @@ public class Server {
 						break;
 					case "ANNONCE" :
 						send = "ANNONCE;";
+						String domain = tab[1].toLowerCase();
 						for(Annonce a : getAnnonces()) {
-							if(tab[1].equals(a.getType())) send += a.getType()+"***"+a.getDescription()+"***"+a.getRef()+"***"+a.getPrix()+"***"+a.getLogin()+"###";
+							if(domain.equals(a.getType())) send += a.getType()+"***"+a.getDescription()+"***"+a.getRef()+"***"+a.getPrix()+"***"+a.getLogin()+"###";
 						}
 						send();
 						break;
 					case "DELANNS" :
-						if(user == null) send = "FAIL;You are not connected";
-						else {
-							for(Annonce a : getAnnonces()) {
-								if(Integer.parseInt(tab[1]) == a.getRef() && (a.getLogin()).equals(user.getPseudo())) {
-									delete_annonce(a);
-									send = "OK";
-									send();
-									break;
-								}
-							}
-							send = "FAIL";
-						}
-						send();
+						delanns(tab);
 						break;
 					case "MYYANNS" :
 						if(user == null) send = "FAIL;You are not connected";
@@ -265,41 +235,62 @@ public class Server {
 						send();
 						break;
 					case "MESSAGE" :
-						send = null;
-						if(user == null) send = "FAIL;Error - you are not connected";
-						else {
-							int ref =  Integer.parseInt(tab[1]);
-							for(Annonce a : annonces) {
-								if(a.getRef() == ref) {
-									for(User u : users) {
-										if(u.getPseudo().equals(a.getLogin())) {
-											send = "MESSAGE;"+u.getPortUDP();
-										}
-									}
-								}
-							}
-							if(send == null) send = "FAIL;Error - this annonce does not exist";
-						}
-						send();
+						message(tab);
 						break;
 					default : 
 						send = "FAIL;This command does not exist";
 						send();
 				}
 			}while(!mess.equals("QUIT"));
+			close();
+		}
+
+		private void delanns(String[] tab) {
+			if(user == null) send = "FAIL;You are not connected";
+			else {
+				for(Annonce a : getAnnonces()) {
+					if(!isNumeric(tab[1])) send = "FAIL;Wrong entered ref";
+					else if(Integer.parseInt(tab[1]) == a.getRef() && (a.getLogin()).equals(user.getPseudo())) {
+						delete_annonce(a);
+						send = "OK";
+						break;
+					}
+				}
+				if(!send.contains("OK"))send = "FAIL;this annonce doesn't exist";
+			}
+			send();
+		}
+
+		private void message(String[] tab) {
+			send = null;
+			if(user == null) send = "FAIL;Error - you are not connected";
+			else {
+				int ref = -1;
+				if(isNumeric(tab[1])) ref =  Integer.parseInt(tab[1]);
+				for(Annonce a : annonces) {
+					if(a.getRef() == ref) {
+						for(User u : users) {
+							if(u.getPseudo().equals(a.getLogin())) {
+								send = "MESSAGE;"+u.getPortUDP()+";"+u.getIp();
+							}
+						}
+					}
+				}
+				if(send == null) send = "FAIL;Error - this annonce does not exist";
+			}
+			send();
+		}
+
+		private boolean isNumeric(String str) {
+			return str.matches("-?\\d+(\\.\\d+)?");
+		}
+
+		private void close(){
 			pw.close();
-			try {
-				br.close();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				System.out.println("Echec déconnexion br");
-			}
-			try {
-				so.close();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				System.out.println("Echec déconnexion socket");
-			}
+			try { br.close(); }
+			catch (IOException e) { Affichage.display_error("Echec déconnexion br"); }
+			try { so.close(); }
+			catch (IOException e) { Affichage.display_error("Echec déconnexion socket"); }
 		}
 	}
 
