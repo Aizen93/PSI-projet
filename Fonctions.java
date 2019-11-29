@@ -11,7 +11,7 @@ public class Fonctions implements Runnable{
     private BufferedReader in ;
     private String protocole;
     private static int ref = 0;      
-    private static ArrayList<Users> listUsers = new ArrayList<Users>() ;
+    private static ArrayList<User> listUser = new ArrayList<User>() ;
     private static ArrayList<Annonce> annoncesAll = new ArrayList<Annonce>();
 
     
@@ -21,7 +21,7 @@ public class Fonctions implements Runnable{
 
     @Override
     public void run() {
-    	Users u = null;
+    	User u = null;
         try {
             out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));             
@@ -94,7 +94,7 @@ public class Fonctions implements Runnable{
         }
 	}
 
-	private Users connect(String msg[]) {
+	private User connect(String msg[]) {
         String pseudo="",mdp="",ip = "";
         int portUDP = 0;
         try{
@@ -141,8 +141,8 @@ public class Fonctions implements Runnable{
         	out.flush();
         	return null;
         }
-        Users user = null;
-        for(Users u : listUsers) {
+        User user = null;
+        for(User u : listUser) {
             if( pseudo.equals(u.getPseudo())) {
             	if(u.getConnect()) {
             		out.println("FAIL;Vous êtes déjà connecté");
@@ -151,10 +151,10 @@ public class Fonctions implements Runnable{
             		break;
             	}
             	else if (mdp.equals(u.getMdp())) {
+            		u.setPortUDP(portUDP);
+            		u.setConnect(true);
+            		u.setIP(ip);
                     user = u;
-                    user.setConnect(true);
-                    user.setIP(ip);
-                    user.setPortUDP(portUDP);
                     break;
                 }else{
                 	out.println("FAIL;mot de passe incorrect");
@@ -164,15 +164,15 @@ public class Fonctions implements Runnable{
             }
         }
         if(user == null){
-        	user = new Users(pseudo, mdp,portUDP,ip);
-        	listUsers.add(user);        	
+        	user = new User(pseudo, mdp,portUDP,ip);
+        	listUser.add(user);        	
         }
         out.println("CONNECT");
         out.flush();
         return user;
     }
     
-	private synchronized void addAnnonce(Users user,String[]token){
+	private synchronized void addAnnonce(User user,String[]token){
 		String domaine="", desc = "";
 		int prix = 0;
 		try {
@@ -211,7 +211,7 @@ public class Fonctions implements Runnable{
 		out.flush();
 	}
 	
-    private synchronized void deleteAnnonceParRef(Users u,String[] token){
+    private synchronized void deleteAnnonceParRef(User u,String[] token){
         try{
         	boolean trouve = false;
         	int ref = Integer.parseInt(token[1]);
@@ -257,7 +257,7 @@ public class Fonctions implements Runnable{
         }     
     }
     
-    private synchronized void afficherMesAnnoneces(Users usr){
+    private synchronized void afficherMesAnnoneces(User usr){
         if(usr != null){
             String message ="MYYANNS;";
             for(int i = 0;i < annoncesAll.size();i++){
@@ -294,7 +294,7 @@ public class Fonctions implements Runnable{
            
     }
 
-    private synchronized void envoiCoordonneeUDP(String[] token, Users u){
+    private synchronized void envoiCoordonneeUDP(String[] token, User u){
         try{
         	int id_annonce = Integer.parseInt(token[1]);
             String envoi = "MESSAGE;";
@@ -306,10 +306,10 @@ public class Fonctions implements Runnable{
             	for(int i = 0; i < annoncesAll.size(); i++){
             		if(annoncesAll.get(i).getRef( ) == id_annonce){
             			String login = annoncesAll.get(i).getLogin();
-            			for(int j = 0; j < listUsers.size(); j++){
-            				if(listUsers.get(j).getPseudo().equals(login)){
-            					portUDP=listUsers.get(j).getPortUDP();
-            					ip = listUsers.get(j).getIP();
+            			for(int j = 0; j < listUser.size(); j++){
+            				if(listUser.get(j).getPseudo().equals(login)){
+            					portUDP=listUser.get(j).getPortUDP();
+            					ip = listUser.get(j).getIP();
             					break;
             				}
             			}
@@ -331,7 +331,7 @@ public class Fonctions implements Runnable{
         }
         out.flush();    
     }
-    private synchronized Users disconnection(Users usr){
+    private synchronized User disconnection(User usr){
         if(usr != null) {
             usr.setConnect(false);
             usr = null;

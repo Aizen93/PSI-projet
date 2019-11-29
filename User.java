@@ -1,11 +1,11 @@
-public class Users {
+public class User {
 
     private String pseudo,mdp,ip;
     private int portUDP; 
     private boolean connect;
 
 		
-    public Users(String _pseudo, String _mdp,int _portUDP,String _ip) {
+    public User(String _pseudo, String _mdp,int _portUDP,String _ip) {
         this.pseudo = _pseudo;
         this.mdp = _mdp;
         this.portUDP = _portUDP;

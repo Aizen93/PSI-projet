@@ -26,13 +26,14 @@ public class ClientTCP {
 			this.pseudoCourant = "invite";
 			this.isConnected = false;
 		} catch(Exception e) {
-			System.out.println("Connexion impossible, le Serveur n'a peut etre pas démarré");
+			System.out.println("Connexion au Serveur impossible");
 		}	
 	}
 
 	public static void main(String[] args) {
-		String ip = "localhost";
+//		String ip = "localhost";
 		ClientTCP clientTCP = null;
+		System.out.println(args[0]);
 		try{
 			clientTCP = new ClientTCP(args[0]);
 		} catch (ArrayIndexOutOfBoundsException e) {
@@ -396,6 +397,9 @@ public class ClientTCP {
 			return null;
 		} catch (IOException e) {
 			System.out.println("Erreur de readline");
+			return null;
+		} catch(ArrayIndexOutOfBoundsException e) {
+			System.out.println("Le Serveur n'a pas envoyé l'adresse IP ou le portUDP");
 			return null;
 		}
 	}
