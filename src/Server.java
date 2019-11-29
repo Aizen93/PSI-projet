@@ -1,3 +1,5 @@
+import javax.net.ssl.SSLServerSocketFactory;
+import javax.net.ssl.SSLSocket;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -12,26 +14,29 @@ public class Server {
 	private ArrayList<User> users;
 	private ArrayList<Annonce> annonces;
 
-	
-	public Server(ServerSocket s) throws UnknownHostException {
-		Affichage.display_load_server(s.getInetAddress().getLocalHost().getHostAddress());
-		ServerSocket serv = s;
+
+	public Server() throws IOException {
+		System.setProperty("javax.net.ssl.keyStore", "server.jsk");
+		System.setProperty("javax.net.ssl.keyStorePassword" , "123456");
+		SSLServerSocketFactory socketFactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
+		ServerSocket serv = socketFactory.createServerSocket(1027);
 		users = new ArrayList<User>();
 		annonces = new ArrayList<Annonce>();
-		try{      
+		Affichage.display_load_server(serv.getInetAddress().getLocalHost().getHostAddress());
+		try{
 			while(true){
-				Socket so = serv.accept();
-				ServerThread server = new ServerThread(so);
-				Thread t_server = new Thread(server);
-				t_server.start();
-			}	
+				//Socket s = serv.accept();
+				//ServerThread server = new ServerThread(s);
+				//Thread t_server = new Thread(server);
+				//t_server.start();
+			}
 		}
 		catch (Exception e) {
 			Affichage.display_error("Error - Connection to thread failed");
 		}
 
 	}
-	
+
 	public ArrayList<User> getUsers() {
 		return users;
 	}
@@ -59,17 +64,7 @@ public class Server {
 	public void delete_annonce(Annonce a) {
 		annonces.remove(a);
 	}
-	
-	public static void main(String[] args) {
-		try{
-			ServerSocket s = new ServerSocket (1027);
-			new Server(s);
-		}
-		catch (Exception e) {
-			Affichage.display_error("Error - Connection to server failed");
-		}
 
-	}
 	
 	public class ServerThread implements Runnable{
 		
@@ -293,5 +288,14 @@ public class Server {
 			catch (IOException e) { Affichage.display_error("Echec déconnexion socket"); }
 		}
 	}
+	public static void main(String[] args) {
+		try{
+			new Server();
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+			//Affichage.display_error("Error - Connection to server failed");
+		}
 
+	}
 }

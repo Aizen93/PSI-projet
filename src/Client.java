@@ -1,3 +1,5 @@
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
 import java.net.*;
 import java.io.*;
 import java.util.*;
@@ -6,7 +8,7 @@ import java.util.regex.Pattern;
 
 class Client {
 
-    private Socket so;
+    private SSLSocket so;
     private BufferedReader br;
     private PrintWriter pw;
     private final Scanner sc;
@@ -340,9 +342,12 @@ class Client {
                 System.out.print(">> Please enter a valid server's IP address : ");
                 serverIP = sc.nextLine();
             }
+            System.setProperty("javax.net.ssl.trustStore", "client.jsk");
+            System.setProperty("javax.net.ssl.trustStorePasswor d", "123456");
+            SSLSocketFactory socketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+            so = (SSLSocket)socketFactory.createSocket(serverIP, serverTCPPort);
             
-            
-            so = new Socket(serverIP, serverTCPPort);
+            //so = new Socket(serverIP, serverTCPPort);
         }catch (UnknownHostException e) {
             System.out.println(Affichage.RED_BACKGROUND_BRIGHT + "Error host" + Affichage.ANSI_RESET);
         }catch (IOException e) {
