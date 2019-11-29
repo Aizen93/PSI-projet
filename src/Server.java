@@ -16,8 +16,10 @@ public class Server {
 	private ArrayList<Annonce> annonces;
 
 	
-	public Server(ServerSocket s) {
+	public Server(ServerSocket s) throws UnknownHostException {
 		System.out.println(Color.GREEN_BOLD_BRIGHT + "--------------Server is now running -----------------------" + Color.ANSI_RESET);
+                InetAddress ip = InetAddress.getLocalHost();
+                System.out.println(Color.GREEN_BOLD_BRIGHT +"----------------- IP : " + s.getInetAddress().getLocalHost().getHostAddress()+" -----------------------" + Color.ANSI_RESET);
 		this.serv = s;
 		users = new ArrayList<User>();
 		annonces = new ArrayList<Annonce>();
@@ -134,18 +136,17 @@ public class Server {
 	        pw.flush();
 		}
 		
-		private synchronized int add_user(String pseudo, String mdp) {
+		private synchronized int add_user(String pseudo, String mdp, int port, String ip) {
 	        System.out.println("-------------------------------------------");
 			System.out.println("            ----> New User created");
 			System.out.println("                       pseudo : "+pseudo+", mdp : "+mdp);
 	        System.out.println("-------------------------------------------");
-			user = new User(pseudo, mdp, port_udp);
-			port_udp ++;
+			user = new User(pseudo, mdp, port, ip);
 			addUser(user);;
 			return user.getPortUDP();
 		}
 		
-		private synchronized int connect(String pseudo, String mdp) {
+		private synchronized int connection(String pseudo, String mdp, int port_udp, String ip_address) {
 			for(User u : getUsers()) {
 				if( pseudo.equals(u.getPseudo()) ) {
 					if (mdp.equals(u.getMdp())) {
@@ -155,13 +156,16 @@ public class Server {
 						System.out.println("            ----> User connected");
 						System.out.println("                       pseudo : "+pseudo+", mdp : "+mdp);
 				        System.out.println("-------------------------------------------");
+                                                u.setIp(ip_address);
+                                                u.setPort_udp(port_udp);
 						return u.getPortUDP();
 					}else {
 						return 0;
 					}
 				}
 			}
-			return add_user(pseudo, mdp);
+			add_user(pseudo, mdp,port_udp, ip_address);
+                        return port_udp;
 		}
 		
 		private synchronized boolean add_annonce(String []tab) {
@@ -177,8 +181,8 @@ public class Server {
 		}
 
 		private void connect(String[] tab) {
-			if(tab.length == 3) {
-				int port = connect(tab[1], tab[2]);
+			if(tab.length == 5) {
+				int port = connection(tab[1], tab[2],Integer.parseInt(tab[3]),tab[4]);
 				if(port>0) {
 					send = "CONNECT;" + port;
 				}

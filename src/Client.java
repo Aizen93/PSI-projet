@@ -1,6 +1,8 @@
 import java.net.*;
 import java.io.*;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 class Client {
 
@@ -16,7 +18,7 @@ class Client {
     private ClientUDP client_udp;
     private int current_user_udp_port = 0;
     private InetSocketAddress address;
-    private String username, password;
+    private String username, password, IP;
 
     public Client() {
         this.exit = false;
@@ -24,19 +26,30 @@ class Client {
         connection();
         buffered();
         this.sc = new Scanner(System.in);
-        /*Runtime.getRuntime().addShutdownHook(new Thread() {
-            public void run() {
-                try {
-                    Thread.sleep(200);
-                    quitApply();
-                    exit = true;
-                    System.exit(1);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    System.out.println("Main Client Thread interrupted - Throwed Exception catched in constructor!");
-                }
+        
+    }
+    
+    /**
+     * A function that finds a free port for the client.
+     *
+     * @return The first free port found
+     */
+    private int getFreePort() {
+        int port;
+        DatagramSocket server;
+        for (port = 1; port <= 9999; port++) {
+            try {
+                server = new DatagramSocket(port);
+                server.close();
+                break;
+            } catch (IOException ex) {
+                // System.out.println("The following port is not free " + port + ".");
             }
-        });*/
+        }
+        if (port == 10000) {
+            return -1;
+        }
+        return port;
     }
 
     public void menu() {
@@ -51,7 +64,13 @@ class Client {
     
 
     public void communication() throws NumberFormatException, SocketException {
-        //read();
+        current_user_udp_port = getFreePort();
+        if(current_user_udp_port == -1){
+            System.out.println("Sorry there is no free port available... Try again later !");
+            System.exit(1);
+        } 
+        System.out.print("Please enter the server's IP address : ");
+        IP = sc.nextLine();
         while(!exit) {
             System.out.print(Color.BLUE_BRIGHT + "> Enter a command: " + Color.ANSI_RESET);
             command = sc.nextLine();
@@ -173,7 +192,7 @@ class Client {
                 Console console = System.console();
                 password = new String(console.readPassword(">> Password: "));
 
-                message_to_send = "CONNECT;" + username + ";" + password;
+                message_to_send = "CONNECT;" + username + ";" + password + ";" + current_user_udp_port + ";" + IP;
                 send(message_to_send);
                 read();
                 String[]tab = message_received.split(";");
@@ -320,7 +339,7 @@ class Client {
 
     private void connection() {
         try {
-            so = new Socket("localhost", 1027);
+            so = new Socket("172.28.45.228", 1027);
         }catch (UnknownHostException e) {
             System.out.println(Color.RED_BACKGROUND_BRIGHT + "Error host" + Color.ANSI_RESET);
         }catch (IOException e) {
@@ -331,7 +350,7 @@ class Client {
     private void buffered() {
         try {
             br = new BufferedReader(new InputStreamReader(so.getInputStream()));
-        } catch (IOException e) {
+        } catch (IOException | NullPointerException e) {
             System.out.println(Color.RED_BACKGROUND_BRIGHT + "Echec création BufferedReader" + Color.ANSI_RESET);
         }
         try {
@@ -353,8 +372,51 @@ class Client {
         pw.println(message);
         pw.flush();
     }
+    
+    public void printCommands(){
+        System.out.println("+-----------------------------------------------+");
+        System.out.println("| You can use the following commands :");
+        System.out.println("| - CONNECT : to log in");
+        System.out.println("| - DISCONN : to disconnect (offline mode");
+        System.out.println("| - ADDANNS : to add an anounce");
+        System.out.println("| - ALLANNS : to see all anounces");
+    }
+    
+    /**
+     * A function that handles the reception of the username and its validty.
+     *
+     * @return The valid username as a string.
+     */
+    private String username() {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Enter a username of 8 alphanumerical characters: ");
+        String pseudo = sc.nextLine();
+        Pattern p = Pattern.compile("[a-zA-Z_0-9]*");
+        Matcher m = p.matcher(pseudo);
+        boolean b1 = m.matches();
+        while (pseudo.length() != 8 || !b1) {
+            System.out.print("Enter a username of 8 alphanumerical characters: ");
+            pseudo = sc.nextLine();
+            m = p.matcher(pseudo);
+            b1 = m.matches();
+        }
+        return pseudo;
+    }
+    
+    private boolean isIPAddress(String ip){
+        Pattern p = Pattern.compile("^([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\." +
+                "([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\." +
+                "([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\." +
+                "([01]?\\d\\d?|2[0-4]\\d|25[0-5])$");
+        Matcher match = p.matcher(ip);
+        if (!match.matches()) {
+            System.out.println("Incorrect IP address format");
+            return false;
+        }
+        return true;
+    }
 
-    public static void main(String[] args) throws NumberFormatException, SocketException {
+    public static void main(String[] args) throws NumberFormatException, SocketException, UnknownHostException {
         Client client = new Client();
         System.out.println(Color.YELLOW_BRIGHT + "####### Welcome to M2 PSI project #######" + Color.ANSI_RESET);
         //System.out.println(Color.isMac() + " - " + Color.isWindows() + " - " +Color.isUnix());
