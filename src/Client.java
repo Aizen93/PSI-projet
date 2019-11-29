@@ -17,16 +17,16 @@ class Client {
     private String message_to_send;
     private ClientUDP client_udp;
     private int current_user_udp_port = 0;
+    private int serverTCPPort = 1027;
     private InetSocketAddress address;
-    private String username, password, IP;
+    private String username, password, serverIP, current_user_IP;
 
     public Client() {
         this.exit = false;
         this.mode_disconnected = true;
+        this.sc = new Scanner(System.in);
         connection();
         buffered();
-        this.sc = new Scanner(System.in);
-        
     }
     
     /**
@@ -64,13 +64,6 @@ class Client {
     
 
     public void communication() throws NumberFormatException, SocketException {
-        current_user_udp_port = getFreePort();
-        if(current_user_udp_port == -1){
-            System.out.println("Sorry there is no free port available... Try again later !");
-            System.exit(1);
-        } 
-        System.out.print("Please enter the server's IP address : ");
-        IP = sc.nextLine();
         while(!exit) {
             System.out.print(Color.BLUE_BRIGHT + "> Enter a command: " + Color.ANSI_RESET);
             command = sc.nextLine();
@@ -97,7 +90,7 @@ class Client {
                     addAnnounce();
                     break;
                 case "READ":
-                    client_udp.read(username, current_user_udp_port, sc);
+                    client_udp.read(username, current_user_udp_port, current_user_IP, sc);
                     break;
                 case "QUIT":
                     quitApply();
@@ -120,13 +113,14 @@ class Client {
             read();
             String []tab = message_received.split(";");
             //if les bon result
-            if(tab.length == 1 && tab[0].equals("MESSAGE")) {
-                System.out.println(Color.RED_BRIGHT + "Sorry no annouce found with ref = "+ announce_ref + Color.ANSI_RESET);
+            if(tab.length == 2 && tab[0].equals("FAIL")) {
+                //System.out.println(Color.RED_BRIGHT + "Sorry no annouce found with ref = "+ announce_ref + Color.ANSI_RESET);
+                System.out.println(Color.RED_BRIGHT + tab[1] + announce_ref + Color.ANSI_RESET);
             }else {
-                if(tab[0].equals("MESSAGE")) {
-                    address = new InetSocketAddress("localhost", Integer.parseInt(tab[1]));
+                if(tab[0].equals("MESSAGE") && tab.length == 3) {
+                    address = new InetSocketAddress(tab[2], Integer.parseInt(tab[1]));
                     System.out.print(">> Message : ");
-                    message_to_send = "WRITETO;"+ username + ";" + current_user_udp_port + ";" + sc.nextLine();
+                    message_to_send = "WRITETO;"+ username + ";" + current_user_udp_port + ";" + current_user_IP + ";" + sc.nextLine();
 
                     client_udp.sendTo(address, message_to_send);
                 }else {
@@ -151,7 +145,7 @@ class Client {
                     System.out.println(Color.GREEN_BRIGHT + "################" + Color.ANSI_RESET);
                     System.out.println(Color.YELLOW_BRIGHT + "Now, you can only request public annouces but can't interact with anything else !" + Color.ANSI_RESET);  
                 } else {
-                    System.out.println(Color.RED_BRIGHT + "ERROR, Bad server response, couldn't disconnect" + Color.ANSI_RESET);
+                    System.out.println(Color.RED_BRIGHT + "Sorry, couldn't disconnect" + Color.ANSI_RESET);
                     System.exit(1);
                 }
             }else{
@@ -192,21 +186,20 @@ class Client {
                 Console console = System.console();
                 password = new String(console.readPassword(">> Password: "));
 
-                message_to_send = "CONNECT;" + username + ";" + password + ";" + current_user_udp_port + ";" + IP;
+                message_to_send = "CONNECT;" + username + ";" + password + ";" + current_user_udp_port + ";" + serverIP;
                 send(message_to_send);
                 read();
                 String[]tab = message_received.split(";");
-                if(tab[0].equals("CONNECT")){
+                if(tab[0].equals("CONNECT") && tab.length == 1){
                     mode_disconnected = false;
                     client_udp = new ClientUDP();
-                    current_user_udp_port = Integer.parseInt(tab[1]);
                     client_udp.bind(current_user_udp_port);
                     client_udp.start();
                     System.out.println(Color.GREEN_BRIGHT + "############################" + Color.ANSI_RESET);
                     System.out.println(Color.GREEN_BRIGHT + "# Connection successfull ! #" + Color.ANSI_RESET);
                     System.out.println(Color.GREEN_BRIGHT + "############################" + Color.ANSI_RESET);
-                }else if(message_received.equals("FAIL")){
-                    System.out.println(Color.YELLOW_BRIGHT + "Couldn't connect to the server, try again !" + Color.ANSI_RESET);
+                }else if(tab[0].equals("FAIL") && tab.length == 2){
+                    System.out.println(Color.YELLOW_BRIGHT + tab[1] + Color.ANSI_RESET);
                 }else{
                     System.out.println(Color.RED_BRIGHT + "SERVER BAD RESPONSE" + Color.ANSI_RESET);
                 }
@@ -254,7 +247,8 @@ class Client {
                         }
                     }
                 }else{
-                    System.out.println(Color.RED_BRIGHT + "SERVER BAD RESPONSE" + Color.ANSI_RESET);
+                    if(res[0].equals("FAIL") && res.length == 2) System.out.println(Color.RED_BRIGHT + res[1] + Color.ANSI_RESET);
+                    else System.out.println(Color.RED_BRIGHT + "SERVER BAD RESPONSE" + Color.ANSI_RESET);
                 }
             }
         }catch(Exception e){
@@ -339,7 +333,16 @@ class Client {
 
     private void connection() {
         try {
-            so = new Socket("172.28.45.228", 1027);
+            current_user_udp_port = getFreePort();
+            if(current_user_udp_port == -1){
+                System.out.println(Color.RED_BOLD_BRIGHT + "Sorry there is no free port available... Try again later !" + Color.ANSI_RESET);
+                System.exit(1);
+            }
+            System.out.println("Attributed port : "+ Color.GREEN_BOLD_BRIGHT + current_user_udp_port + Color.ANSI_RESET + " !");
+            System.out.print(">> Please enter the server's IP address : ");
+            serverIP = sc.nextLine();
+            
+            so = new Socket(serverIP, serverTCPPort);
         }catch (UnknownHostException e) {
             System.out.println(Color.RED_BACKGROUND_BRIGHT + "Error host" + Color.ANSI_RESET);
         }catch (IOException e) {
