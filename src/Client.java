@@ -185,13 +185,19 @@ class Client {
                 //password = sc.nextLine();
                 Console console = System.console();
                 password = new String(console.readPassword(">> Password: "));
-
-                message_to_send = "CONNECT;" + username + ";" + password + ";" + current_user_udp_port + ";" + serverIP;
+                current_user_udp_port = getFreePort();
+                if(current_user_udp_port == -1){
+                    System.out.println(Color.RED_BOLD_BRIGHT + "Sorry there is no free port available... Try again later !" + Color.ANSI_RESET);
+                    System.exit(1);
+                }
+                current_user_IP = so.getLocalAddress().getHostAddress();
+                message_to_send = "CONNECT;" + username + ";" + password + ";" + current_user_udp_port + ";" + current_user_IP;
                 send(message_to_send);
                 read();
                 String[]tab = message_received.split(";");
                 if(tab[0].equals("CONNECT") && tab.length == 1){
                     mode_disconnected = false;
+                    System.out.println("Attributed port : "+ Color.GREEN_BOLD_BRIGHT + current_user_udp_port + Color.ANSI_RESET + " !");
                     client_udp = new ClientUDP();
                     client_udp.bind(current_user_udp_port);
                     client_udp.start();
@@ -199,8 +205,10 @@ class Client {
                     System.out.println(Color.GREEN_BRIGHT + "# Connection successfull ! #" + Color.ANSI_RESET);
                     System.out.println(Color.GREEN_BRIGHT + "############################" + Color.ANSI_RESET);
                 }else if(tab[0].equals("FAIL") && tab.length == 2){
+                    current_user_udp_port = 0;
                     System.out.println(Color.YELLOW_BRIGHT + tab[1] + Color.ANSI_RESET);
                 }else{
+                    current_user_udp_port = 0;
                     System.out.println(Color.RED_BRIGHT + "SERVER BAD RESPONSE" + Color.ANSI_RESET);
                 }
             }else{
@@ -333,12 +341,6 @@ class Client {
 
     private void connection() {
         try {
-            current_user_udp_port = getFreePort();
-            if(current_user_udp_port == -1){
-                System.out.println(Color.RED_BOLD_BRIGHT + "Sorry there is no free port available... Try again later !" + Color.ANSI_RESET);
-                System.exit(1);
-            }
-            System.out.println("Attributed port : "+ Color.GREEN_BOLD_BRIGHT + current_user_udp_port + Color.ANSI_RESET + " !");
             
             serverIP = "";
             while(!isIPAddress(serverIP)){

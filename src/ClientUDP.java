@@ -12,13 +12,16 @@ public class ClientUDP  implements Runnable {
     private boolean running;
     private LinkedList<Message> messages;
 
+    public ClientUDP() {
+        this.messages = new LinkedList<>();
+    }
+
     public void bind(int port) throws SocketException {
         //socket.close();
         socket = new DatagramSocket(port);
     }
 
     public void start(){
-        this.messages = new LinkedList<>();
         thread = new Thread(this);
         thread.start();
     }
@@ -43,6 +46,7 @@ public class ClientUDP  implements Runnable {
                 String msg = new String(buffer, 0, packet.getLength());
                 String []tab = msg.split(";");
                 if(tab.length == 5 && tab[0].equals("WRITETO")) {
+                    System.out.println("Ip receive : "+tab[3]);
                     messages.add(new Message(tab[1], Integer.parseInt(tab[2]), tab[3], tab[4]));
                 }
             } 
@@ -77,9 +81,10 @@ public class ClientUDP  implements Runnable {
                 System.out.print(">> Would you like to answer ? (y/n): ");
                 answer = sc.nextLine();
                 if(answer.equals("y") || answer.equals("Y") || answer.equals("yes") || answer.equals("YES")){
+                    System.out.println("Ip = "+mess.getIP()+", port udp = "+mess.getPortUDP());
                     InetSocketAddress address = new InetSocketAddress(mess.getIP(), mess.getPortUDP());
                     System.out.print(">> Message : ");
-                    answer = "WRITETO;"+ pseudo + ";" + port + ";" + IP + sc.nextLine();
+                    answer = "WRITETO;"+ pseudo + ";" + port + ";" + IP + ";" + sc.nextLine();
 
                     sendTo(address, answer);
                     break;
