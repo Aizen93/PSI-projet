@@ -1,3 +1,4 @@
+import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
 import java.io.BufferedReader;
@@ -15,20 +16,29 @@ public class Server {
 	private ArrayList<Annonce> annonces;
 
 
-	public Server() throws IOException {
+	public Server() {
 		System.setProperty("javax.net.ssl.keyStore", "server.jsk");
 		System.setProperty("javax.net.ssl.keyStorePassword" , "123456");
 		SSLServerSocketFactory socketFactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
-		ServerSocket serv = socketFactory.createServerSocket(1027);
+		SSLServerSocket serv = null;
+		try {
+			serv = (SSLServerSocket) socketFactory.createServerSocket(1027);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		users = new ArrayList<User>();
 		annonces = new ArrayList<Annonce>();
-		Affichage.display_load_server(serv.getInetAddress().getLocalHost().getHostAddress());
+		try {
+			Affichage.display_load_server(serv.getInetAddress().getLocalHost().getHostAddress());
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+		}
 		try{
 			while(true){
-				//Socket s = serv.accept();
-				//ServerThread server = new ServerThread(s);
-				//Thread t_server = new Thread(server);
-				//t_server.start();
+				Socket s = serv.accept();
+				ServerThread server = new ServerThread(s);
+				Thread t_server = new Thread(server);
+				t_server.start();
 			}
 		}
 		catch (Exception e) {
