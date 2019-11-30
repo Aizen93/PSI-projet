@@ -92,6 +92,10 @@ public class Affichage {
         System.out.println("+-----------------------------------------------+");
     }
 
+    public static void display_exception(String mess) {
+        System.out.println(RED_BACKGROUND_BRIGHT + mess + ANSI_RESET);
+    }
+
     public static void display_read_server(String mess) {
         System.out.println(WHITE_BRIGHT + "-------------------------------------------" + ANSI_RESET);
         System.out.println(WHITE_BRIGHT + "----> Message receive : "+mess + ANSI_RESET);

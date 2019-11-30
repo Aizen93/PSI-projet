@@ -346,6 +346,7 @@ class Client {
             System.setProperty("javax.net.ssl.trustStorePassword", "123456");
             SSLSocketFactory socketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
             so = (SSLSocket)socketFactory.createSocket(serverIP, serverTCPPort);
+
             //so = new Socket(serverIP, serverTCPPort);
         }catch (UnknownHostException e) {
             System.out.println(Affichage.RED_BACKGROUND_BRIGHT + "Error host" + Affichage.ANSI_RESET);
