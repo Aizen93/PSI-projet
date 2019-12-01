@@ -41,9 +41,9 @@ public class ClientTCP {
 	//-------------------------------- MAIN ----------------------------------------------------------------------------------
 	
 	public static void main(String[] args) {
-		//		String ip = "localhost";
+//		String ip = "localhost";
 		ClientTCP clientTCP = null;
-		System.out.println(args[0]);
+//		System.out.println("IP entre en parametre : " + args[0]);	//DEBUG
 		try{
 			clientTCP = new ClientTCP(args[0]);
 		} catch (ArrayIndexOutOfBoundsException e) {
@@ -127,20 +127,14 @@ public class ClientTCP {
 			String message = "QUIT";
 			printWriter.println(message);
 			printWriter.flush();
-			//Lecture
-			String reception = bufferedReader.readLine();
-			if(reception.equals("OK")) {
-				System.out.println("Déconnection réussi");
-			}
-			else {
-				System.out.println("La déconnection ne s'est pas passé comme prévu");
-			}
+			System.out.println("Fermeture du programme");
 			printWriter.close();
 			bufferedReader.close();
 			socket.close();
 			System.exit(1);
 		} catch (NullPointerException e) {
 			System.err.println("Vous n'etes plus connecté au serveur");
+			System.exit(1);
 		} catch (SocketException e) {
 			System.err.println("Vous n'etes plus connecté au serveur. Il ne fonctionne peut etre plus");
 			closeEverything();
@@ -557,17 +551,5 @@ public class ClientTCP {
 	public void setPseudoCourant(String pseudoCourant) {
 		this.pseudoCourant = pseudoCourant;
 	}
-	
-	//------------------------------------------------------------------------------------------------------------
-	//Cree un String a partir d'un tableau de Bytes
-	public String byteToString(byte[] messageByte) {
-		return new String(messageByte);
-	}
-
-	//Cree un String en prenant les valeurs du tableau de byte de debut a offset(fin)
-	public String byteToString(byte[] messageByte,int debut, int offset) {
-		return new String(messageByte,debut,offset);
-	}
-
 }	
 

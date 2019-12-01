@@ -82,8 +82,12 @@ public class ClientUDP implements Runnable {
 	public void readAll() {
 		ArrayDeque<Message> deque = file.clone();
 		Message m;
-		while((m=deque.poll())!=null) {
-			System.out.println("Message de " + m.getPseudo() + " : " + m.getMessage());
+		if(deque.isEmpty()) {
+			System.out.println("Votre liste de message est vide");
+		} else {
+			while((m=deque.poll())!=null) {
+				System.out.println("Message de " + m.getPseudo() + " : " + m.getMessage());
+			}			
 		}
 	}
 	public ArrayDeque<Message> getFile() {

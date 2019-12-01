@@ -17,8 +17,8 @@ public class Serveur{
         try{
 			SSLServerSocket server = (SSLServerSocket)factory.createServerSocket(1027);
             System.out.println("..... Bienvenue sur notre Serveur ....");   
+            System.out.println("Adresse IP du serveur : " + server.getInetAddress().getLocalHost().getHostAddress());
             while(true) {
-            	System.out.println(server.getInetAddress().getLocalHost().getHostAddress());
                 SSLSocket socket = (SSLSocket)server.accept();
                 Fonctions serv = new Fonctions(socket);
                 Thread t = new Thread(serv);

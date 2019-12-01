@@ -60,7 +60,7 @@ public class Fonctions implements Runnable{
                         envoiCoordonneeUDP(token,u);
                         break;
                     case "QUIT":
-                    	quit();
+                    	quit(u);
                         break;
                     default:
                         out.println("FAIL;Veuillez respecter le protocole");
@@ -73,14 +73,18 @@ public class Fonctions implements Runnable{
         	if(u==null)	nameClient = "invite";
         	else	nameClient = u.getPseudo();
         	System.out.println("Le Client " + nameClient +  " s'est déconnecté de manière brutale");
-            quit();
+            quit(u);
         }
     }
     
-    private void quit() {
+    private void quit(User u) {
         try{
-        	out.println("OK");
-        	out.flush();
+        	for(User user : listUser) {
+        		if(user.equals(u)) {
+        			user.setConnect(false);
+        		}
+        	}
+//        	u.setConnect(false);
             out.close();
             in.close();
             socket.close();
