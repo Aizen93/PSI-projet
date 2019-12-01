@@ -1,12 +1,10 @@
 import java.io.*;
 import java.net.Socket;
 import java.util.*;
-
-import javax.crypto.NullCipher;
-
+import javax.net.ssl.*;
 public class Fonctions implements Runnable{ 
     
-    private Socket socket;
+    private SSLSocket socket;
     private PrintWriter out ;
     private BufferedReader in ;
     private String protocole;
@@ -15,16 +13,17 @@ public class Fonctions implements Runnable{
     private static ArrayList<Annonce> annoncesAll = new ArrayList<Annonce>();
 
     
-    public Fonctions(Socket _socket) {
-        this.socket = _socket;
+    public Fonctions(SSLSocket _socket) {
+        this.socket = (SSLSocket) _socket;
     }
 
     @Override
     public void run() {
     	User u = null;
         try {
+            
             out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
-            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));             
+            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));  
             String str = "";
             String [] token = null;
             while ((str = in.readLine()) != null) {
@@ -35,7 +34,7 @@ public class Fonctions implements Runnable{
                 }else{
                     token = str.split(";");
                     protocole = token[0];
-                }   
+                } 
                 switch (protocole) {
                     case "CONNECT":
                         u = connect(token);
