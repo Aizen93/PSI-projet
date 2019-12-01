@@ -3,12 +3,15 @@ import java.net.*;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
+
 public class ClientTCP {
 	//Instanciation des options du serveur auquel on se connecte
 	private static int portTCPServer = 1027;
 
 	//Instanciation des elements de communications avec le serveurs
-	private Socket socket;
+	private SSLSocket socket;
 	private PrintWriter printWriter;
 	private BufferedReader bufferedReader;
 	private Scanner inFromUser;
@@ -20,7 +23,12 @@ public class ClientTCP {
 	
 	public ClientTCP(String ip) {
 		try {
-			this.socket = new Socket(ip, this.portTCPServer);
+			System.setProperty("javax.net.ssl.trustStore", "client.jsk");
+            System.setProperty("javax.net.ssl.trustStorePassword", "123456");
+            SSLSocketFactory socketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+            this.socket = (SSLSocket)socketFactory.createSocket(ip,this.portTCPServer);
+
+			//this.socket = new SSLSocket(ip, this.portTCPServer);
 			this.printWriter = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
 			this.bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			this.inFromUser = new Scanner(System.in);
@@ -498,7 +506,7 @@ public class ClientTCP {
 		return socket;
 	}
 
-	public void setSocket(Socket socket) {
+	public void setSocket(SSLSocket socket) {
 		this.socket = socket;
 	}
 
