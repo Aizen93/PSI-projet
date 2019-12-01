@@ -1,72 +1,84 @@
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import java.security.*;
 import java.util.Base64;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 public class Crypto {
 
-    private KeyPairGenerator keyGen;
-    private  KeyPair keypair;
-    private PrivateKey privateKey;
-    private PublicKey publicKey;
-    private Cipher cipher;
+    private static KeyPairGenerator keyGen;
+    private static KeyPair keypair;
 
-    public Crypto(){
+    public static void generateKeyPair() {
+        keyGen = null;
         try {
             keyGen = KeyPairGenerator.getInstance("RSA");
-            keyGen.initialize(1024);
-            keypair = keyGen.genKeyPair();
-            privateKey = keypair.getPrivate();
-            publicKey = keypair.getPublic();
-            cipher = Cipher.getInstance("RSA");
-            cipher.init(Cipher.ENCRYPT_MODE, publicKey);
-        }catch( Exception e){
-            Affichage.display_error("Error loading encryption packages");
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
         }
+
+        keyGen.initialize(1024, new SecureRandom());
+        keypair = keyGen.generateKeyPair();
     }
 
-    public String encryption(String message) {
-        String crypt = "";
-        byte[] textChiffre = new byte[0];
+    public static KeyPair getKeypair(){
+        return keypair;
+    }
+
+    public static String encrypt(String plainText){
         try {
-            textChiffre = cipher.doFinal(message.getBytes()); //chiffré
-            //StringBuffer stringBuffer = new StringBuffer();
-            //for (byte bytes : textChiffre) stringBuffer.append(String.format("%02x", bytes & 0xff));
-            //crypt =stringBuffer.toString();
-        } catch (IllegalBlockSizeException e) {
-            Affichage.display_exception("Error size in encryption function");
+            Cipher encryptCipher = Cipher.getInstance("RSA");
+            encryptCipher.init(Cipher.ENCRYPT_MODE, keypair.getPublic());
+            byte[] cipherText = encryptCipher.doFinal(plainText.getBytes(UTF_8));
+            String mess =  Base64.getEncoder().encodeToString(cipherText);
+            System.out.println("necrypt : "+mess);
+            return mess;
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (NoSuchPaddingException e) {
+            e.printStackTrace();
         } catch (BadPaddingException e) {
-            Affichage.display_exception("Error badPadding in encryption function");
-        }
-        return Base64.getEncoder().encodeToString(textChiffre);
-    }
-
-    public String decryption(String crypt) {
-        try {
-            byte[] textChiffre = Base64.getDecoder().decode(crypt);
-            cipher.init(Cipher.DECRYPT_MODE, privateKey);
-            byte[] plainText = cipher.doFinal(textChiffre);
-            return new String(plainText);
+            e.printStackTrace();
+        } catch (IllegalBlockSizeException e) {
+            e.printStackTrace();
         } catch (InvalidKeyException e) {
-            Affichage.display_exception("Error key in decryption function");
-        } catch (BadPaddingException e) {
-            Affichage.display_exception("Error badPadding in decryption function");
-        } catch (IllegalBlockSizeException e) {
-            Affichage.display_exception("Error size in decryption function");
+            e.printStackTrace();
         }
-        return "";
+        return null;
+    }
+
+    public static String decrypt(String cipherText) {
+        try {
+            byte[] bytes = Base64.getDecoder().decode(cipherText);
+            Cipher decriptCipher = Cipher.getInstance("RSA");
+            decriptCipher.init(Cipher.DECRYPT_MODE, keypair.getPrivate());
+            return new String(decriptCipher.doFinal(bytes), UTF_8);
+        }
+        catch (NoSuchAlgorithmException e) { e.printStackTrace(); }
+        catch (NoSuchPaddingException e) { e.printStackTrace(); }
+        catch (BadPaddingException e) { e.printStackTrace(); }
+        catch (IllegalBlockSizeException e) { e.printStackTrace(); }
+        catch (InvalidKeyException e) { e.printStackTrace(); }
+        return null;
     }
 
     public static void main(String[] args) {
-        try{
-            String mess = "Oussama va manger du chocolat !!";
-            Crypto crypto = new Crypto();
-            String crypt = crypto.encryption(mess);
-            System.out.println("encryption : "+crypt);
-            System.out.println("decryption : "+crypto.decryption(crypt));
-        }
-        catch( Exception e){System.out.println("« probleme");
-        }
+//First generate a public/private key pair
+        generateKeyPair();
+//Our secret message
+        String message = "the answer to life the universe and everything";
+
+//Encrypt the message
+        String cipherText = encrypt(message);
+
+        System.out.println(cipherText);
+
+//Now decrypt it
+        String decipheredMessage = decrypt(cipherText);
+
+        System.out.println(decipheredMessage);
     }
 }

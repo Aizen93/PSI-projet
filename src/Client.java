@@ -24,6 +24,7 @@ class Client {
     private String username, password, serverIP, current_user_IP;
 
     public Client() {
+        Crypto.generateKeyPair();
         this.exit = false;
         this.mode_disconnected = true;
         this.sc = new Scanner(System.in);
@@ -134,6 +135,7 @@ class Client {
             } 
         }catch(Exception e){
             System.out.println(Affichage.RED_BACKGROUND_BRIGHT + "ERROR EXCEPTION : something went really wrong" + Affichage.ANSI_RESET);
+            e.printStackTrace();
         }
     }
     
@@ -202,7 +204,7 @@ class Client {
                     mode_disconnected = false;
                     System.out.println("Attributed port : "+ Affichage.GREEN_BOLD_BRIGHT + current_user_udp_port + Affichage.ANSI_RESET + " !");
                     client_udp = new ClientUDP();
-                    client_udp.bind(current_user_udp_port);
+                    client_udp.create_datagram_socket(current_user_udp_port);
                     client_udp.start();
                     Affichage.display_connected();
                 }else if(tab[0].equals("FAIL") && tab.length == 2){

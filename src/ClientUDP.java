@@ -16,9 +16,12 @@ public class ClientUDP  implements Runnable {
         this.messages = new LinkedList<>();
     }
 
-    public void bind(int port) throws SocketException {
-        //socket.close();
-        socket = new DatagramSocket(port);
+    public void create_datagram_socket(int port){
+        try {
+            socket = new DatagramSocket(port);
+        } catch (SocketException e) {
+            Affichage.display_error("Error creating DatagramSocket");
+        }
     }
 
     public void start(){
@@ -30,7 +33,7 @@ public class ClientUDP  implements Runnable {
         running = false;
         socket.close();
         messages.clear();
-        thread.stop();//- DEPRECATED, a changer par un system de boolean comme indiqué sur la java doc 
+        thread.interrupt();
     }
 
     @Override

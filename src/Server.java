@@ -85,10 +85,15 @@ public class Server {
 		private String mess, send;
 		
 		public ServerThread(Socket s) {
+			Crypto.generateKeyPair();
 			this.so = s;
 			buffered();
 			this.user = null;
 			Affichage.display_client_connect(-1,null, null);
+			Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+				System.out.println("W: interrupt received, killing server…");
+				close();
+			}));
 		}
 		
 		
@@ -110,7 +115,9 @@ public class Server {
 				mess = br.readLine();
 				Affichage.display_read_server(mess);
 			} catch (IOException e) {
-				Affichage.display_error("Echec du readLine");
+				if(mess == null) Affichage.display_error("Echec : ctrl-C catch");
+				else Affichage.display_error("Echec du readLine");
+				mess = "QUIT";
 			}
 		}
 		
