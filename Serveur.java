@@ -8,16 +8,16 @@ import javax.net.ssl.*;
 public class Serveur{
 
     
-    public static void main(String[] args){
+    public static void main(String[] args) {
         
-		System.setProperty("javax.net.ssl.keyStore", "server.jks");
+		System.setProperty("javax.net.ssl.keyStore", "server.jsk");
 		System.setProperty("javax.net.ssl.keyStorePassword" , "123456");
 		SSLServerSocketFactory factory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
 
         try{
 			SSLServerSocket server = (SSLServerSocket)factory.createServerSocket(1027);
             System.out.println("..... Bienvenue sur notre Serveur ....");   
-            while(true){
+            while(true) {
             	System.out.println(server.getInetAddress().getLocalHost().getHostAddress());
                 SSLSocket socket = (SSLSocket)server.accept();
                 Fonctions serv = new Fonctions(socket);

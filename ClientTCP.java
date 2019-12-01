@@ -143,6 +143,7 @@ public class ClientTCP {
 			System.err.println("Vous n'etes plus connecté au serveur");
 		} catch (SocketException e) {
 			System.err.println("Vous n'etes plus connecté au serveur. Il ne fonctionne peut etre plus");
+			closeEverything();
 			System.exit(1);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -295,6 +296,7 @@ public class ClientTCP {
 			System.err.println("Vous n'etes plus connecté au serveur");
 		} catch (SocketException e) {
 			System.err.println("Vous n'etes plus connecté au serveur. Il ne fonctionne peut etre plus");
+			closeEverything();
 			System.exit(1);
 			return false;
 		}
@@ -340,6 +342,7 @@ public class ClientTCP {
 			System.err.println("Vous n'etes plus connecté au serveur");
 		} catch (SocketException e) {
 			System.err.println("Vous n'etes plus connecté au serveur. Il ne fonctionne peut etre plus");
+			closeEverything();
 			System.exit(1);
 			return false;
 		}
@@ -389,6 +392,7 @@ public class ClientTCP {
 			System.err.println("Vous n'etes plus connecté au serveur");
 		} catch (SocketException e) {
 			System.err.println("Vous n'etes plus connecté au serveur. Il ne fonctionne peut etre plus");
+			closeEverything();
 			System.exit(1);
 			return false;
 		}
@@ -417,6 +421,7 @@ public class ClientTCP {
 			System.err.println("Vous n'etes plus connecté au serveur");
 		} catch (SocketException e) {
 			System.err.println("Vous n'etes plus connecté au serveur. Il ne fonctionne peut etre plus");
+			closeEverything();
 			System.exit(1);
 			return false;
 		}
@@ -453,6 +458,7 @@ public class ClientTCP {
 			return null;
 		} catch (SocketException e) {
 			System.err.println("Vous n'etes plus connecté au serveur. Il ne fonctionne peut etre plus");
+			closeEverything();
 			System.exit(1);
 			return null;
 		} catch (IOException e) {
@@ -461,6 +467,17 @@ public class ClientTCP {
 		} catch(ArrayIndexOutOfBoundsException e) {
 			System.out.println("Le Serveur n'a pas envoyé l'adresse IP ou le portUDP");
 			return null;
+		}
+	}
+	
+	public void closeEverything() {
+		try {
+			printWriter.close();
+			bufferedReader.close();
+			socket.close();
+			inFromUser.close();
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 	

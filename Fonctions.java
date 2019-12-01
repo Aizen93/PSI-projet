@@ -109,8 +109,8 @@ public class Fonctions implements Runnable{
         		return null;
             }
             portUDP = Integer.parseInt(msg[3].trim());
-            if(portUDP<1000 || portUDP > 9999) {
-        		out.println("FAIL;Le port UDP doit etre entre 1000 et 9999");
+            if(portUDP<1 || portUDP > 65000) {
+        		out.println("FAIL;Le port UDP doit etre entre 1 et 65000");
         		out.flush();
         		return null;            	
             }
