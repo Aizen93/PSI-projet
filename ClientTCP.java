@@ -16,7 +16,8 @@ public class ClientTCP {
 	private ClientUDP clientUDP;
 	private boolean isConnected;
 
-
+	//------------------------- CONSTRUCTEUR ---------------------------------------------------------------------------------
+	
 	public ClientTCP(String ip) {
 		try {
 			this.socket = new Socket(ip, this.portTCPServer);
@@ -30,8 +31,10 @@ public class ClientTCP {
 		}	
 	}
 
+	//-------------------------------- MAIN ----------------------------------------------------------------------------------
+	
 	public static void main(String[] args) {
-//		String ip = "localhost";
+		//		String ip = "localhost";
 		ClientTCP clientTCP = null;
 		System.out.println(args[0]);
 		try{
@@ -47,9 +50,9 @@ public class ClientTCP {
 		int portUDP = 0;
 		while(connected) {
 
-			System.out.println("Entrez votre choix : 0 - Quitter l'application, 1 - Connect, 2 - Disconnect, 3 - Add annonce,"
-					+ " 4 - Voir toutes les annonces, 5 - Voir mes annonces,\n 6 - Voir les annonces avec filtre,"
-					+ " 7 - Supprimer une annonce, 8 - Envoyer un message à un utilisateur, 9 - Lire un message, "
+			System.out.println("Entrez votre choix : 0 - Quitter l'application\n 1 - Connect\n 2 - Disconnect\n 3 - Add annonce\n"
+					+ " 4 - Voir toutes les annonces\n 5 - Voir mes annonces\n 6 - Voir les annonces avec filtre\n"
+					+ " 7 - Supprimer une annonce\n 8 - Envoyer un message à un utilisateur\n 9 - Lire un message\n "
 					+ "10 - Lire tout ses messages");
 			commande = clientTCP.inFromUser.nextLine();
 			switch(commande) {
@@ -59,7 +62,7 @@ public class ClientTCP {
 			case "1":
 				if(!clientTCP.isConnected) {
 					portUDP = clientTCP.connect();
-//					System.out.println("DEBUG - le port UDP récupéré par le serveur est : " + portUDP);
+					//					System.out.println("DEBUG - le port UDP récupéré par le serveur est : " + portUDP);
 				}
 				else	System.out.println("Vous etes deja connecte");
 				break;
@@ -82,17 +85,25 @@ public class ClientTCP {
 				clientTCP.deleteAnnonce();
 				break;
 			case "8":
-				Adresse adresse = clientTCP.sendMessage();
-//				System.out.println(portUDPSend);
-				if(portUDP!=-1)	clientTCP.sendUDP(adresse);
-				else	System.out.println("L'annonce n'existe pas");
+				if(clientTCP.isConnected) {
+					Adresse adresse = clientTCP.sendMessage();
+					if(portUDP!=-1)	clientTCP.sendUDP(adresse);
+					else	System.out.println("L'annonce n'existe pas");					
+				} else {
+					System.out.println("Connectez vous pour envoyer un message");
+				}
 				break;
 			case "9":
-				Message m = clientTCP.clientUDP.readOne();
-				if(m!=null)	clientTCP.repondre(m);
+				if(clientTCP.isConnected) {
+					Message m = clientTCP.clientUDP.readOne();
+					if(m!=null)	clientTCP.repondre(m);					
+				} else {
+					System.out.println("Connectez vous pour lire des messages");
+				}
 				break;
 			case "10":
-				clientTCP.clientUDP.readAll();
+				if(clientTCP.isConnected)	clientTCP.clientUDP.readAll();
+				else	System.out.println("Connectez vous pour lire des messages");
 				break;
 			default:
 				break;
@@ -101,6 +112,8 @@ public class ClientTCP {
 		}
 	}
 
+	//---------------------------------- FONCTIONS DU PROTOCOLE CLIENT --> SERVEUR -------------------------------------------
+	
 	public void quit() {
 		try {
 			// Ecriture et envoi du message
@@ -121,12 +134,15 @@ public class ClientTCP {
 			System.exit(1);
 		} catch (NullPointerException e) {
 			System.err.println("Vous n'etes plus connecté au serveur");
+		} catch (SocketException e) {
+			System.err.println("Vous n'etes plus connecté au serveur. Il ne fonctionne peut etre plus");
+			System.exit(1);
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.err.println("Mauvaise lecture");
 		}
 	}
-	
+
 	public int connect() {
 		System.out.println("Entrez votre pseudo : ");
 		String pseudo = inFromUser.nextLine();
@@ -135,10 +151,9 @@ public class ClientTCP {
 		System.out.println("Entrez votre portUDP (entre 1000 et 9999)");
 		String portSend = inFromUser.nextLine();
 		int portUDP = 0;
-		//TODO: Gérer les mauvais inputs
 		try {
 			// Ecriture et envoi du message
-//			System.out.println("DEBUG - Envoi de l@ IP : " + socket.getInetAddress().getHostAddress());
+			//			System.out.println("DEBUG - Envoi de l@ IP : " + socket.getInetAddress().getHostAddress());
 			String message = "CONNECT;"+pseudo+";"+mdp+";"+portSend+";"+socket.getInetAddress().getHostAddress();
 			printWriter.println(message);
 			printWriter.flush();
@@ -163,7 +178,12 @@ public class ClientTCP {
 		} catch (NullPointerException e) {
 			System.err.println("Vous n'etes plus connecté au serveur");
 			return -1;
-		} catch (IOException e) {
+		} catch (SocketException e) {
+			System.err.println("Vous n'etes plus connecté au serveur. Il ne fonctionne peut etre plus");
+			System.exit(1);
+			return -1;
+		}
+		catch (IOException e) {
 			e.printStackTrace();
 			System.err.println("Mauvaise lecture");
 			return -1;
@@ -188,13 +208,18 @@ public class ClientTCP {
 		} catch (NullPointerException e) {
 			System.err.println("Vous n'etes plus connecté au serveur");
 			return false;
-		} catch (IOException e) {
+		} catch (SocketException e) {
+			System.err.println("Vous n'etes plus connecté au serveur. Il ne fonctionne peut etre plus");
+			System.exit(1);
+			return false;
+		}
+		catch (IOException e) {
 			e.printStackTrace();
 			System.err.println("Deconnection impossible");
 			return false;
-		}
+		} 
 	}
-	
+
 	public boolean addAnnonce() {
 		System.out.println("Entrez le domaine : ");
 		String domaine = inFromUser.nextLine();
@@ -217,7 +242,12 @@ public class ClientTCP {
 			return true;
 		} catch (NullPointerException e) {
 			System.err.println("Vous n'etes plus connecté au serveur");
-		} finally {
+		} catch (SocketException e) {
+			System.err.println("Vous n'etes plus connecté au serveur. Il ne fonctionne peut etre plus");
+			System.exit(1);
+			return false;
+		}
+		finally {
 			return false;
 		}
 	}
@@ -240,7 +270,7 @@ public class ClientTCP {
 					String[] tmp = receptionSplit[1].split("###");
 					for(int i = 0; i < tmp.length; i++){
 						String [] src = tmp[i].split("\\*\\*\\*");
-						
+
 						System.out.println("+----------------------------------------------+");
 						System.out.println("| Reference : " + src[2]);
 						System.out.println("| Domain : " + src[0]);
@@ -256,12 +286,17 @@ public class ClientTCP {
 			return true;
 		} catch (NullPointerException e) {
 			System.err.println("Vous n'etes plus connecté au serveur");
-		} finally {
+		} catch (SocketException e) {
+			System.err.println("Vous n'etes plus connecté au serveur. Il ne fonctionne peut etre plus");
+			System.exit(1);
 			return false;
 		}
-		
+		finally {
+			return false;
+		}
+
 	}
-	
+
 	public boolean myAnnonce() {
 		try {
 			String message = "MYYANNS";
@@ -296,12 +331,17 @@ public class ClientTCP {
 			return true;
 		} catch (NullPointerException e) {
 			System.err.println("Vous n'etes plus connecté au serveur");
-		} finally {
+		} catch (SocketException e) {
+			System.err.println("Vous n'etes plus connecté au serveur. Il ne fonctionne peut etre plus");
+			System.exit(1);
+			return false;
+		}
+		finally {
 			return false;
 		}
 
 	}
-	
+
 	public boolean filterAnnonce() {
 		try {
 			String message = "ANNONCE";
@@ -340,7 +380,12 @@ public class ClientTCP {
 			return true;
 		} catch (NullPointerException e) {
 			System.err.println("Vous n'etes plus connecté au serveur");
-		} finally {
+		} catch (SocketException e) {
+			System.err.println("Vous n'etes plus connecté au serveur. Il ne fonctionne peut etre plus");
+			System.exit(1);
+			return false;
+		}
+		finally {
 			return false;
 		}
 	}
@@ -363,12 +408,16 @@ public class ClientTCP {
 			return true;
 		} catch (NullPointerException e) {
 			System.err.println("Vous n'etes plus connecté au serveur");
-		} finally {
+		} catch (SocketException e) {
+			System.err.println("Vous n'etes plus connecté au serveur. Il ne fonctionne peut etre plus");
+			System.exit(1);
+			return false;
+		}
+		finally {
 			return false;
 		}
 	}
 
-	//TODO: A modifier si on recoit @IP + portUDP : Renvoyer un DatahramSocket ? ou un couple (IP+port)
 	public Adresse sendMessage() {
 		System.out.println("Entrez la ref de l'annonce de l'utilisateur à contacter : ");
 		String ref = inFromUser.nextLine();
@@ -386,14 +435,18 @@ public class ClientTCP {
 				portUDP = Integer.parseInt(receptionSplit[1]);
 				adresseIP = receptionSplit[2];
 				adresse = new Adresse(adresseIP, portUDP);
-//				System.out.println("DEBUG - Port UDP récupéré : " + receptionSplit[1]);
+				//				System.out.println("DEBUG - Port UDP récupéré : " + receptionSplit[1]);
 			} else if(receptionSplit[0].equals("FAIL")){
 				System.out.println(receptionSplit[1]);
 			}
-//			System.out.println("DEBUG - portUDP dans sendMessage() : " + portUDP);
+			//			System.out.println("DEBUG - portUDP dans sendMessage() : " + portUDP);
 			return adresse;
 		} catch (NullPointerException e) {
 			System.err.println("Vous n'etes plus connecté au serveur");
+			return null;
+		} catch (SocketException e) {
+			System.err.println("Vous n'etes plus connecté au serveur. Il ne fonctionne peut etre plus");
+			System.exit(1);
 			return null;
 		} catch (IOException e) {
 			System.out.println("Erreur de readline");
@@ -404,6 +457,8 @@ public class ClientTCP {
 		}
 	}
 	
+	//------------------------- PEER TO PEER CLIENT/CLIENT EN UDP -----------------------------------------------------------
+
 	public void sendUDP(Adresse adresse) {
 		try {
 			System.out.println("Entrez votre message :");
@@ -424,7 +479,7 @@ public class ClientTCP {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public void repondre(Message m) {
 		System.out.println("Voulez vous répondre ? (oui|non)");
 		try {
@@ -437,7 +492,7 @@ public class ClientTCP {
 		}
 	}
 
-	//------------------------------------------------------------------------------------------------------------
+	//---------------------------------- GETTERS ET SETTERS -----------------------------------------------------------------
 
 	public Socket getSocket() {
 		return socket;
@@ -471,6 +526,14 @@ public class ClientTCP {
 		this.printWriter = printWriter;
 	}
 
+	public String getPseudoCourant() {
+		return pseudoCourant;
+	}
+	
+	public void setPseudoCourant(String pseudoCourant) {
+		this.pseudoCourant = pseudoCourant;
+	}
+	
 	//------------------------------------------------------------------------------------------------------------
 	//Cree un String a partir d'un tableau de Bytes
 	public String byteToString(byte[] messageByte) {
@@ -481,15 +544,6 @@ public class ClientTCP {
 	public String byteToString(byte[] messageByte,int debut, int offset) {
 		return new String(messageByte,debut,offset);
 	}
-
-	public String getPseudoCourant() {
-		return pseudoCourant;
-	}
-
-	public void setPseudoCourant(String pseudoCourant) {
-		this.pseudoCourant = pseudoCourant;
-	}
-
 
 }	
 
