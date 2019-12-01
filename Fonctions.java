@@ -114,7 +114,6 @@ public class Fonctions implements Runnable{
         		out.flush();
         		return null;            	
             }
-            //TODO: Rajouter une vérification pour l'IP ?
             ip = msg[4].trim();
         } catch(ArrayIndexOutOfBoundsException e){
         	if(e.getMessage().equals("1")) {
