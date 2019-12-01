@@ -150,7 +150,7 @@ public class ClientTCP {
 		String pseudo = inFromUser.nextLine();
 		System.out.println("Entrez votre mdp");
 		String mdp = inFromUser.nextLine();
-		System.out.println("Entrez votre portUDP (entre 1000 et 9999)");
+		System.out.println("Entrez votre portUDP (entre 1 et 65000)");
 		String portSend = inFromUser.nextLine();
 		int portUDP = 0;
 		try {
