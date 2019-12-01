@@ -1,6 +1,5 @@
 import java.io.*;
 import java.net.*;
-import java.util.InputMismatchException;
 import java.util.Scanner;
 
 import javax.net.ssl.SSLSocket;
@@ -281,9 +280,9 @@ public class ClientTCP {
 
 						System.out.println("+----------------------------------------------+");
 						System.out.println("| Reference : " + src[2]);
-						System.out.println("| Domain : " + src[0]);
-						System.out.println("| Price: " + src[3]);
-						System.out.println("| Owner: " + src[4]);
+						System.out.println("| Domaine : " + src[0]);
+						System.out.println("| Prix: " + src[3]);
+						System.out.println("| Utilisateur: " + src[4]);
 						System.out.println("| Description : " + src[1]);
 						System.out.println("+----------------------------------------------+");
 					}
@@ -326,9 +325,9 @@ public class ClientTCP {
 
 						System.out.println("+----------------------------------------------+");
 						System.out.println("| Reference : " + src[2]);
-						System.out.println("| Domain : " + src[0]);
-						System.out.println("| Price: " + src[3]);
-						System.out.println("| Owner: " + src[4]);
+						System.out.println("| Domaine : " + src[0]);
+						System.out.println("| Prix: " + src[3]);
+						System.out.println("| Utilisateur: " + src[4]);
 						System.out.println("| Description : " + src[1]);
 						System.out.println("+----------------------------------------------+");
 					}
@@ -375,9 +374,9 @@ public class ClientTCP {
 
 						System.out.println("+----------------------------------------------+");
 						System.out.println("| Reference : " + src[2]);
-						System.out.println("| Domain : " + src[0]);
-						System.out.println("| Price: " + src[3]);
-						System.out.println("| Owner: " + src[4]);
+						System.out.println("| Domaine : " + src[0]);
+						System.out.println("| Prix: " + src[3]);
+						System.out.println("| Utilisateur: " + src[4]);
 						System.out.println("| Description : " + src[1]);
 						System.out.println("+----------------------------------------------+");
 					}
