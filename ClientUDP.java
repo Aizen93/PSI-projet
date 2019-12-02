@@ -79,6 +79,7 @@ public class ClientUDP implements Runnable {
 		return m;
 	}
 
+	//Affiche tout les messages sans les supprimer de la file
 	public void readAll() {
 		ArrayDeque<Message> deque = file.clone();
 		Message m;

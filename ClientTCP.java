@@ -94,7 +94,7 @@ public class ClientTCP {
 			case "8":
 				if(clientTCP.isConnected) {
 					Adresse adresse = clientTCP.sendMessage();
-					if(portUDP!=-1)	clientTCP.sendUDP(adresse);
+					if(adresse!=null)	clientTCP.sendUDP(adresse);
 					else	System.out.println("L'annonce n'existe pas");					
 				} else {
 					System.out.println("Connectez vous pour envoyer un message");
